@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package bems.ai.v1;
+
+service AiOptimizationService {
+  rpc Health(AiHealthRequest) returns (AiHealthResponse);
+  rpc Optimize(OptimizeRequest) returns (OptimizeResponse);
+  rpc Feedback(FeedbackRequest) returns (FeedbackResponse);
+}
+
+message AiHealthRequest {}
+
+message AiHealthResponse {
+  string status = 1;
+  string service = 2;
+}
+
+message OptimizeRequest {
+  string payload_json = 1;
+}
+
+message OptimizeResponse {
+  string optimization_json = 1;
+}
+
+message FeedbackRequest {
+  string payload_json = 1;
+}
+
+message FeedbackResponse {
+  string feedback_json = 1;
+}

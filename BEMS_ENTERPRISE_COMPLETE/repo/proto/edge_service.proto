@@ -1,0 +1,98 @@
+syntax = "proto3";
+
+package bems.edge.v1;
+
+service EdgeCoreService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc ListDevices(ListDevicesRequest) returns (ListDevicesResponse);
+  rpc DiscoverDevices(DiscoverDevicesRequest) returns (DiscoverDevicesResponse);
+  rpc ReadPoint(ReadPointRequest) returns (ReadPointResponse);
+  rpc WritePoint(WritePointRequest) returns (WritePointResponse);
+  rpc GetEnergyForecast(EnergyForecastRequest) returns (EnergyForecastResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string edge_version = 2;
+}
+
+message ListDevicesRequest {}
+
+message ListDevicesResponse {
+  repeated Device devices = 1;
+}
+
+message DiscoverDevicesRequest {
+  int32 low_instance = 1;
+  int32 high_instance = 2;
+}
+
+message DiscoverDevicesResponse {
+  repeated Device devices = 1;
+}
+
+message ReadPointRequest {
+  int32 device_instance = 1;
+  int32 object_type = 2;
+  int32 object_instance = 3;
+}
+
+message ReadPointResponse {
+  double value = 1;
+  string units = 2;
+  string status = 3;
+}
+
+message WritePointRequest {
+  int32 device_instance = 1;
+  int32 object_type = 2;
+  int32 object_instance = 3;
+  double value = 4;
+  WriteMode mode = 5;
+}
+
+message WritePointResponse {
+  bool accepted = 1;
+  double previous_value = 2;
+  double written_value = 3;
+  string message = 4;
+}
+
+message EnergyForecastRequest {
+  int32 hours = 1;
+}
+
+message EnergyForecastResponse {
+  repeated EnergyPrediction forecast = 1;
+}
+
+message Device {
+  int32 id = 1;
+  int32 zone_id = 2;
+  int32 bacnet_instance = 3;
+  int32 object_instance = 4;
+  string name = 5;
+  string type = 6;
+  string vendor = 7;
+  string model = 8;
+  string ip_address = 9;
+  string object_type = 10;
+  string units = 11;
+  double present_value = 12;
+  string status = 13;
+}
+
+message EnergyPrediction {
+  string interval = 1;
+  double predicted_kwh = 2;
+  double estimated_cost = 3;
+  string recommendation = 4;
+}
+
+enum WriteMode {
+  WRITE_MODE_UNSPECIFIED = 0;
+  WRITE_MODE_ABSOLUTE = 1;
+  WRITE_MODE_DELTA = 2;
+}

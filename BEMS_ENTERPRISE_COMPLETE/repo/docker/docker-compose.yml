@@ -1,0 +1,51 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: node-api/Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - ai-service
+    restart: unless-stopped
+    environment:
+      MYSQL_HOST: db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: bems
+      AI_SERVICE_URL: http://ai-service:8000
+      AI_GRPC_ENDPOINT: ai-service:50052
+      WATCHDOG_INTERVAL_MS: 30000
+      TELEMETRY_STREAM_INTERVAL_MS: 5000
+
+  ui:
+    build: ../ui
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: "http://localhost:3000"
+
+  ai-service:
+    build: ../ai-service
+    ports:
+      - "8000:8000"
+      - "50052:50052"
+    restart: unless-stopped
+
+  db:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bems
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
