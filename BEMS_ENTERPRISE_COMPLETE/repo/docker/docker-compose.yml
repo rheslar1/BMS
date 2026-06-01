@@ -1,0 +1,281 @@
+x-bems-logging: &bems-logging
+  driver: gelf
+  options:
+    gelf-address: "udp://localhost:12201"
+    tag: "bems/{{.Name}}"
+
+services:
+  api:
+    image: ${BEMS_API_IMAGE:-bems-api:${IMAGE_TAG:-local}}
+    build:
+      context: ..
+      dockerfile: node-api/Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - ai-service
+      - edge-core
+      - kafka
+      - rabbitmq
+    restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    environment:
+      MYSQL_HOST: db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: bems
+      AI_SERVICE_URL: http://ai-service:8000
+      AI_GRPC_ENDPOINT: ai-service:50052
+      EDGE_GRPC_ENDPOINT: edge-core:50051
+      EDGE_COMMAND_TRANSPORT: rabbitmq
+      WATCHDOG_INTERVAL_MS: 30000
+      TELEMETRY_STREAM_INTERVAL_MS: 5000
+      KAFKA_BROKERS: kafka:9092
+      MQTT_BROKER_URL: ${MQTT_BROKER_URL:-}
+      RABBITMQ_URL: ${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672}
+      RABBITMQ_EXCHANGE: ${RABBITMQ_EXCHANGE:-bems.events}
+      AZURE_IOT_HUB_HOSTNAME: ${AZURE_IOT_HUB_HOSTNAME:-}
+      AWS_IOT_ENDPOINT: ${AWS_IOT_ENDPOINT:-}
+      NODE_RED_URL: ${NODE_RED_URL:-}
+      EDGE_PYTHON_LOGIC_ENABLED: ${EDGE_PYTHON_LOGIC_ENABLED:-false}
+      SEDONA_RUNTIME_ENABLED: ${SEDONA_RUNTIME_ENABLED:-false}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *bems-logging
+
+  ui:
+    image: ${BEMS_UI_IMAGE:-bems-ui:${IMAGE_TAG:-local}}
+    build:
+      context: ../ui
+      args:
+        VITE_API_URL: "http://localhost:3000"
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *bems-logging
+
+  ai-service:
+    image: ${BEMS_AI_IMAGE:-bems-ai-service:${IMAGE_TAG:-local}}
+    build: ../ai-service
+    ports:
+      - "8000:8000"
+      - "50052:50052"
+    restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"from urllib.request import urlopen; urlopen('http://localhost:8000/health', timeout=3).read()\""]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *bems-logging
+
+  edge-core:
+    image: ${BEMS_EDGE_IMAGE:-bems-edge-core:${IMAGE_TAG:-local}}
+    build:
+      context: ..
+      dockerfile: edge-core/Dockerfile
+    ports:
+      - "50051:50051"
+      - "47808:47808/udp"
+    restart: unless-stopped
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    environment:
+      EDGE_GRPC_BIND: "0.0.0.0:50051"
+      BACNET_LOCAL_IP: "0.0.0.0"
+      BACNET_SIMULATOR_ENABLED: "true"
+      EDGE_POLLING_ENABLED: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep edge-core || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: *bems-logging
+
+  db:
+    image: mysql:8
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bems
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    logging: *bems-logging
+
+  kafka:
+    image: apache/kafka:3.7.0
+    restart: unless-stopped
+    ports:
+      - "9094:9094"
+    environment:
+      CLUSTER_ID: "MkU3OEVBNTcwNTJENDM2Qk"
+      KAFKA_NODE_ID: "1"
+      KAFKA_PROCESS_ROLES: "broker,controller"
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_LISTENERS: "PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    logging: *bems-logging
+
+  prometheus:
+    image: prom/prometheus:v2.53.4
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - api
+      - alertmanager
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - "--config.file=/etc/alertmanager/alertmanager.yml"
+      - "--storage.path=/alertmanager"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:9093/-/healthy"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  grafana:
+    image: grafana/grafana:11.2.2
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  watchtower:
+    image: containrrr/watchtower:1.7.1
+    restart: unless-stopped
+    command: --cleanup --interval 300 --label-enable
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    profiles: ["observability"]
+    restart: unless-stopped
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.3
+    profiles: ["observability"]
+    restart: unless-stopped
+    ports:
+      - "12201:12201/udp"
+      - "5044:5044"
+      - "9600:9600"
+    volumes:
+      - ./logging/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9600/_node/pipelines || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.3
+    profiles: ["observability"]
+    restart: unless-stopped
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5601/api/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  alertmanager-data:
+  kafka-data:
+  elasticsearch-data:

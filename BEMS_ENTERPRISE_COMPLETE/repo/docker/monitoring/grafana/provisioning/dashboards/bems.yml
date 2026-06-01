@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: BEMS
+    orgId: 1
+    folder: BEMS
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

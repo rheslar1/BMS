@@ -1,0 +1,18 @@
+Start testing: Jun 01 16:09 EDT
+----------------------------------------------------------
+1/1 Testing: field_device_simulator_test
+1/1 Test: field_device_simulator_test
+Command: "/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/field-device/build/field_device_simulator_test"
+Directory: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/field-device/build
+"field_device_simulator_test" start time: Jun 01 16:09 EDT
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"field_device_simulator_test" end time: Jun 01 16:09 EDT
+"field_device_simulator_test" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Jun 01 16:09 EDT

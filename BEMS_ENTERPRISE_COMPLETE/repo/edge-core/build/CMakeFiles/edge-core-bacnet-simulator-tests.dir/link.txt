@@ -1,0 +1,1 @@
+/usr/bin/c++ "CMakeFiles/edge-core-bacnet-simulator-tests.dir/tests/bacnet_simulator_test.cpp.o" "CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_interface.cpp.o" -o edge-core-bacnet-simulator-tests 

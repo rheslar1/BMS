@@ -1,0 +1,43 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.o"
+  "CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.o.d"
+  "CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.o"
+  "CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.o.d"
+  "CMakeFiles/edge-core.dir/src/bacnet_client.cpp.o"
+  "CMakeFiles/edge-core.dir/src/bacnet_client.cpp.o.d"
+  "CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o"
+  "CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o.d"
+  "CMakeFiles/edge-core.dir/src/canbus_interface.cpp.o"
+  "CMakeFiles/edge-core.dir/src/canbus_interface.cpp.o.d"
+  "CMakeFiles/edge-core.dir/src/device_manager.cpp.o"
+  "CMakeFiles/edge-core.dir/src/device_manager.cpp.o.d"
+  "CMakeFiles/edge-core.dir/src/discovery_service.cpp.o"
+  "CMakeFiles/edge-core.dir/src/discovery_service.cpp.o.d"
+  "CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.o"
+  "CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.o.d"
+  "CMakeFiles/edge-core.dir/src/edge_runtime.cpp.o"
+  "CMakeFiles/edge-core.dir/src/edge_runtime.cpp.o.d"
+  "CMakeFiles/edge-core.dir/src/energy_ai.cpp.o"
+  "CMakeFiles/edge-core.dir/src/energy_ai.cpp.o.d"
+  "CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.o"
+  "CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.o.d"
+  "CMakeFiles/edge-core.dir/src/hvac_control.cpp.o"
+  "CMakeFiles/edge-core.dir/src/hvac_control.cpp.o.d"
+  "CMakeFiles/edge-core.dir/src/main.cpp.o"
+  "CMakeFiles/edge-core.dir/src/main.cpp.o.d"
+  "CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.o"
+  "CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.o.d"
+  "CMakeFiles/edge-core.dir/src/writeback_controller.cpp.o"
+  "CMakeFiles/edge-core.dir/src/writeback_controller.cpp.o.d"
+  "edge-core"
+  "edge-core.pdb"
+  "generated/edge_service.grpc.pb.cc"
+  "generated/edge_service.grpc.pb.h"
+  "generated/edge_service.pb.cc"
+  "generated/edge_service.pb.h"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/edge-core.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

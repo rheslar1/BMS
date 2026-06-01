@@ -1,0 +1,1 @@
+/usr/bin/c++ "CMakeFiles/edge-core-discovery-tests.dir/tests/discovery_service_test.cpp.o" "CMakeFiles/edge-core-discovery-tests.dir/src/discovery_service.cpp.o" -o edge-core-discovery-tests 

@@ -1,0 +1,7 @@
+edge-core-tests 3 0.000789986
+edge-core-bacnet-simulator-tests 3 0.000666012
+edge-core-fieldbus-tests 3 0.000625551
+edge-core-energy-ai-tests 3 0.00100802
+edge-core-discovery-tests 3 0.000695502
+edge-core-hvac-control-tests 3 0.000732209
+---

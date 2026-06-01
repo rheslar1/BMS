@@ -1,0 +1,51 @@
+CREATE TABLE IF NOT EXISTS rl_q_values (
+  q_value_id INT AUTO_INCREMENT PRIMARY KEY,
+  zone_id INT NOT NULL,
+  action DOUBLE NOT NULL,
+  q_value DOUBLE NOT NULL DEFAULT 0,
+  sample_count INT NOT NULL DEFAULT 0,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_rl_zone_action (zone_id, action),
+  FOREIGN KEY (zone_id) REFERENCES zones(zone_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS optimization_history (
+  history_id INT AUTO_INCREMENT PRIMARY KEY,
+  source VARCHAR(80) NOT NULL,
+  profile VARCHAR(50),
+  mode JSON,
+  objective JSON,
+  recommendations JSON,
+  estimated_savings_kwh DOUBLE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS fdd_findings (
+  finding_id INT AUTO_INCREMENT PRIMARY KEY,
+  device_id INT DEFAULT NULL,
+  zone_id INT DEFAULT NULL,
+  severity VARCHAR(50) NOT NULL,
+  fault_code VARCHAR(80) NOT NULL,
+  message TEXT NOT NULL,
+  status VARCHAR(50) NOT NULL DEFAULT 'open',
+  payload JSON,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (device_id) REFERENCES devices(device_id) ON DELETE SET NULL,
+  FOREIGN KEY (zone_id) REFERENCES zones(zone_id) ON DELETE SET NULL
+);
+
+CREATE TABLE IF NOT EXISTS maintenance_tickets (
+  ticket_id INT AUTO_INCREMENT PRIMARY KEY,
+  finding_id INT DEFAULT NULL,
+  device_id INT DEFAULT NULL,
+  title VARCHAR(180) NOT NULL,
+  description TEXT,
+  priority VARCHAR(50) NOT NULL DEFAULT 'medium',
+  status VARCHAR(50) NOT NULL DEFAULT 'open',
+  assigned_to VARCHAR(120),
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (finding_id) REFERENCES fdd_findings(finding_id) ON DELETE SET NULL,
+  FOREIGN KEY (device_id) REFERENCES devices(device_id) ON DELETE SET NULL
+);

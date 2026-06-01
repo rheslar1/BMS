@@ -1,0 +1,108 @@
+name: BEMS CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install C++ edge dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            libgrpc++-dev \
+            libprotobuf-dev \
+            pkg-config \
+            protobuf-compiler \
+            protobuf-compiler-grpc
+
+      - name: Verify architecture file map
+        run: ./scripts/verify_architecture.sh
+
+      - name: Configure edge core
+        run: cmake -S edge-core -B edge-core/build
+
+      - name: Build edge core
+        run: cmake --build edge-core/build
+
+      - name: Test C++ writeback module
+        run: ctest --test-dir edge-core/build -R edge-core-tests --output-on-failure
+
+      - name: Test C++ BACnet simulator module
+        run: ctest --test-dir edge-core/build -R edge-core-bacnet-simulator-tests --output-on-failure
+
+      - name: Test C++ fieldbus modules
+        run: ctest --test-dir edge-core/build -R edge-core-fieldbus-tests --output-on-failure
+
+      - name: Test C++ energy AI module
+        run: ctest --test-dir edge-core/build -R edge-core-energy-ai-tests --output-on-failure
+
+      - name: Test C++ discovery module
+        run: ctest --test-dir edge-core/build -R edge-core-discovery-tests --output-on-failure
+
+      - name: Test all C++ edge modules
+        run: ctest --test-dir edge-core/build --output-on-failure
+
+      - name: Configure C++ field device firmware
+        run: cmake -S field-device -B field-device/build
+
+      - name: Build C++ field device firmware
+        run: cmake --build field-device/build
+
+      - name: Test C++ field device firmware
+        run: ctest --test-dir field-device/build --output-on-failure
+
+      - name: Install Node API dependencies
+        run: npm ci
+        working-directory: node-api
+
+      - name: Check Node API syntax
+        run: |
+          node --check server.js
+          node --check auth.js
+          node --check aiClient.js
+          node --check edgeClient.js
+          node --check migrations/runMigrations.js
+        working-directory: node-api
+
+      - name: Test Node API
+        run: npm test
+        working-directory: node-api
+
+      - name: Audit Node API dependencies
+        run: npm audit --audit-level=high
+        working-directory: node-api
+
+      - name: Install Python AI requirements
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt
+        working-directory: ai-service
+
+      - name: Check Python AI service syntax
+        run: python3 -m py_compile app.py generated/ai_service_pb2.py generated/ai_service_pb2_grpc.py
+        working-directory: ai-service
+
+      - name: Test Python AI service
+        run: python3 -m unittest test_app.py
+        working-directory: ai-service
+
+      - name: Install UI dependencies
+        run: npm ci
+        working-directory: ui
+
+      - name: Build UI
+        run: npm run build
+        working-directory: ui

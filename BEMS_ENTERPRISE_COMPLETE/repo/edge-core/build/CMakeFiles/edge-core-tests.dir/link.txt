@@ -1,0 +1,1 @@
+/usr/bin/c++ "CMakeFiles/edge-core-tests.dir/tests/writeback_controller_test.cpp.o" "CMakeFiles/edge-core-tests.dir/src/writeback_controller.cpp.o" -o edge-core-tests 

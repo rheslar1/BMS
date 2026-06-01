@@ -1,0 +1,16 @@
+[Unit]
+Description=BEMS Edge Core
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+Environment=BACNET_LOCAL_IP=0.0.0.0
+Environment=EDGE_GRPC_BIND=0.0.0.0:50051
+Environment=BACNET_SIMULATOR_ENABLED=false
+ExecStart=/usr/bin/bems-edge-core
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

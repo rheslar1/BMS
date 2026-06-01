@@ -1,0 +1,38 @@
+groups:
+  - name: bems-reliability
+    rules:
+      - alert: BemsApiDown
+        expr: up{job="bems-node-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: BEMS Node API is down
+          description: Prometheus cannot scrape the Node API metrics endpoint.
+
+      - alert: BemsDependencyDown
+        expr: bems_watchdog_dependency_up == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: BEMS dependency health degraded
+          description: Watchdog dependency {{ $labels.name }} is unhealthy.
+
+      - alert: BemsActiveAlarmSpike
+        expr: bems_active_alarms > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Active BEMS alarms above threshold
+          description: Active alarms have remained above 10 for at least five minutes.
+
+      - alert: BemsOpenFddFindings
+        expr: bems_open_fdd_findings > 0
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: Open FDD findings exist
+          description: Fault detection findings are open and should be reviewed by operations.
