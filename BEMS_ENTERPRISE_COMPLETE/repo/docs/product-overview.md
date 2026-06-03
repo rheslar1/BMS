@@ -14,9 +14,9 @@ The target product category is a commercial-grade BEMS comparable in scope to Si
 - Real building integration aligned to ANSI/ASHRAE Standard 135-2020 through BACnet/IP Who-Is/I-Am discovery, ReadProperty, WriteProperty, SubscribeCOV setup, safe writeback, and simulator-backed commissioning.
 - Production BACnet stack path through the SourceForge BACnet Protocol Stack at `https://sourceforge.net/projects/bacnet/`, integrated behind the C++ edge-core BACnet interface.
 - Edge gateway operation for each building/site, including offline-safe local control and BACnet communication.
-- Node.js Web API for REST commands, gRPC orchestration, SSE browser live updates, remote management, watchdog health, and administration.
+- Node.js Web API for REST commands, RabbitMQ edge orchestration, SSE browser live updates, remote management, watchdog health, and administration.
 - Python AI service for whole-building optimization, reinforcement learning, predictive simulation, and digital-twin upgrade paths.
-- C++ edge core with modular BACnet, writeback, fieldbus, AHU/VAV/chiller PID control strategies, and gRPC EdgeCoreService.
+- C++ edge core with modular BACnet, BACnet server/device object database, writeback, fieldbus, AHU/VAV/chiller PID control strategies, and RabbitMQ command orchestration.
 - Buildable C++ bare-metal BACnet field-device firmware target with SOLID interfaces, simulator drivers, persistent storage, device-resident schedules, signed OTA bootloader flow, watchdog, and control strategy tests.
 - Reporting center with scheduled reports, manual and due-run execution, notification outbox delivery records, filtered PDF/CSV/JSON exports, role-based report permissions, export audit history, and zone heat map.
 - React production UI direction modeled after commercial WebStation/SCADA workflows: command center, equipment graphics, floorplans, schedules, alarms, trend charts, digital twin, device provisioning, and admin.
@@ -30,7 +30,7 @@ These are the sellable product modules.
 | Module | Customer Value | Implemented Surfaces |
 | --- | --- | --- |
 | Monitoring | Real-time HVAC, energy, alarms, trends, and device state visibility | React dashboard, SSE telemetry/alarm streams, trend logs, energy KPI cards, cost/carbon footprint API |
-| Control | BACnet command writes with safety checks and operator approval | C++ EdgeCoreService, BACnet WriteProperty, safe writeback rollback, setpoint/range APIs, maintenance lockout |
+| Control | BACnet command writes with safety checks and operator approval | RabbitMQ edge commands, BACnet WriteProperty, safe writeback rollback, setpoint/range APIs, maintenance lockout |
 | Scheduling | Occupancy and exception-based building operation | Daily/monthly/yearly schedules, building/zone/device overrides, holiday schedules, special events |
 | AI Optimization | Comfort, energy, cost, and peak-demand optimization | Python AI optimizer, RL Q-values, predictive simulation, Smart Grid AI, demand response adapter |
 | Fault Detection | Detect abnormal operation and generate service workflow | FDD findings, alarm creation, maintenance tickets, stuck valve/fan/off-hours/simultaneous heat-cool checks |
@@ -81,7 +81,7 @@ flowchart TB
   end
 
   subgraph Edge["Site Edge Gateway"]
-    Core["C++ Edge Core\ngRPC EdgeCoreService"]
+    Core["C++ Edge Core\nRabbitMQ edge commands"]
     HVAC["HVAC Control\nAHU/VAV/Chiller PID\nsafe writeback"]
     Sim["BACnet Simulator\nlocal demos + tests"]
   end
@@ -97,7 +97,7 @@ flowchart TB
   API --> DB
   API --> Kafka
   API -->|"gRPC"| AI
-  API -->|"gRPC"| Core
+  API -->|"RabbitMQ AMQP"| Core
   Core --> HVAC
   Core --> Sim
   Core --> BACnet

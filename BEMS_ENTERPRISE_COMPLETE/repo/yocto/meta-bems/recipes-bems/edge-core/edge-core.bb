@@ -1,12 +1,10 @@
 SUMMARY = "BEMS C++ edge core for BACnet and autonomous control"
 LICENSE = "CLOSED"
 
-SRC_URI = "file://edge-core file://proto"
+SRC_URI = "file://edge-core"
 S = "${WORKDIR}/edge-core"
 
-DEPENDS += "protobuf protobuf-native grpc grpc-native"
-
-inherit cmake pkgconfig systemd
+inherit cmake systemd
 
 SYSTEMD_SERVICE:${PN} = "bems-edge-core.service"
 

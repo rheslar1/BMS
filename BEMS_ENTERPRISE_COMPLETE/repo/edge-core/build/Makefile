@@ -166,6 +166,19 @@ edge-core-bacnet-simulator-tests/fast:
 .PHONY : edge-core-bacnet-simulator-tests/fast
 
 #=============================================================================
+# Target rules for targets named edge-core-bacnet-object-database-tests
+
+# Build rule for target.
+edge-core-bacnet-object-database-tests: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 edge-core-bacnet-object-database-tests
+.PHONY : edge-core-bacnet-object-database-tests
+
+# fast build rule for target.
+edge-core-bacnet-object-database-tests/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-object-database-tests.dir/build.make CMakeFiles/edge-core-bacnet-object-database-tests.dir/build
+.PHONY : edge-core-bacnet-object-database-tests/fast
+
+#=============================================================================
 # Target rules for targets named edge-core-fieldbus-tests
 
 # Build rule for target.
@@ -217,54 +230,6 @@ edge-core-hvac-control-tests/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-hvac-control-tests.dir/build.make CMakeFiles/edge-core-hvac-control-tests.dir/build
 .PHONY : edge-core-hvac-control-tests/fast
 
-generated/edge_service.grpc.pb.o: generated/edge_service.grpc.pb.cc.o
-.PHONY : generated/edge_service.grpc.pb.o
-
-# target to build an object file
-generated/edge_service.grpc.pb.cc.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.o
-.PHONY : generated/edge_service.grpc.pb.cc.o
-
-generated/edge_service.grpc.pb.i: generated/edge_service.grpc.pb.cc.i
-.PHONY : generated/edge_service.grpc.pb.i
-
-# target to preprocess a source file
-generated/edge_service.grpc.pb.cc.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.i
-.PHONY : generated/edge_service.grpc.pb.cc.i
-
-generated/edge_service.grpc.pb.s: generated/edge_service.grpc.pb.cc.s
-.PHONY : generated/edge_service.grpc.pb.s
-
-# target to generate assembly for a file
-generated/edge_service.grpc.pb.cc.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.s
-.PHONY : generated/edge_service.grpc.pb.cc.s
-
-generated/edge_service.pb.o: generated/edge_service.pb.cc.o
-.PHONY : generated/edge_service.pb.o
-
-# target to build an object file
-generated/edge_service.pb.cc.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.o
-.PHONY : generated/edge_service.pb.cc.o
-
-generated/edge_service.pb.i: generated/edge_service.pb.cc.i
-.PHONY : generated/edge_service.pb.i
-
-# target to preprocess a source file
-generated/edge_service.pb.cc.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.i
-.PHONY : generated/edge_service.pb.cc.i
-
-generated/edge_service.pb.s: generated/edge_service.pb.cc.s
-.PHONY : generated/edge_service.pb.s
-
-# target to generate assembly for a file
-generated/edge_service.pb.cc.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.s
-.PHONY : generated/edge_service.pb.cc.s
-
 src/bacnet_client.o: src/bacnet_client.cpp.o
 .PHONY : src/bacnet_client.o
 
@@ -296,6 +261,7 @@ src/bacnet_interface.o: src/bacnet_interface.cpp.o
 src/bacnet_interface.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-simulator-tests.dir/build.make CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_interface.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-object-database-tests.dir/build.make CMakeFiles/edge-core-bacnet-object-database-tests.dir/src/bacnet_interface.cpp.o
 .PHONY : src/bacnet_interface.cpp.o
 
 src/bacnet_interface.i: src/bacnet_interface.cpp.i
@@ -305,6 +271,7 @@ src/bacnet_interface.i: src/bacnet_interface.cpp.i
 src/bacnet_interface.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.i
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-simulator-tests.dir/build.make CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_interface.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-object-database-tests.dir/build.make CMakeFiles/edge-core-bacnet-object-database-tests.dir/src/bacnet_interface.cpp.i
 .PHONY : src/bacnet_interface.cpp.i
 
 src/bacnet_interface.s: src/bacnet_interface.cpp.s
@@ -314,7 +281,38 @@ src/bacnet_interface.s: src/bacnet_interface.cpp.s
 src/bacnet_interface.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-simulator-tests.dir/build.make CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_interface.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-object-database-tests.dir/build.make CMakeFiles/edge-core-bacnet-object-database-tests.dir/src/bacnet_interface.cpp.s
 .PHONY : src/bacnet_interface.cpp.s
+
+src/bacnet_object_database.o: src/bacnet_object_database.cpp.o
+.PHONY : src/bacnet_object_database.o
+
+# target to build an object file
+src/bacnet_object_database.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-simulator-tests.dir/build.make CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_object_database.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-object-database-tests.dir/build.make CMakeFiles/edge-core-bacnet-object-database-tests.dir/src/bacnet_object_database.cpp.o
+.PHONY : src/bacnet_object_database.cpp.o
+
+src/bacnet_object_database.i: src/bacnet_object_database.cpp.i
+.PHONY : src/bacnet_object_database.i
+
+# target to preprocess a source file
+src/bacnet_object_database.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-simulator-tests.dir/build.make CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_object_database.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-object-database-tests.dir/build.make CMakeFiles/edge-core-bacnet-object-database-tests.dir/src/bacnet_object_database.cpp.i
+.PHONY : src/bacnet_object_database.cpp.i
+
+src/bacnet_object_database.s: src/bacnet_object_database.cpp.s
+.PHONY : src/bacnet_object_database.s
+
+# target to generate assembly for a file
+src/bacnet_object_database.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-simulator-tests.dir/build.make CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_object_database.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-object-database-tests.dir/build.make CMakeFiles/edge-core-bacnet-object-database-tests.dir/src/bacnet_object_database.cpp.s
+.PHONY : src/bacnet_object_database.cpp.s
 
 src/canbus_interface.o: src/canbus_interface.cpp.o
 .PHONY : src/canbus_interface.o
@@ -393,30 +391,6 @@ src/discovery_service.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/src/discovery_service.cpp.s
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-discovery-tests.dir/build.make CMakeFiles/edge-core-discovery-tests.dir/src/discovery_service.cpp.s
 .PHONY : src/discovery_service.cpp.s
-
-src/edge_grpc_server.o: src/edge_grpc_server.cpp.o
-.PHONY : src/edge_grpc_server.o
-
-# target to build an object file
-src/edge_grpc_server.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.o
-.PHONY : src/edge_grpc_server.cpp.o
-
-src/edge_grpc_server.i: src/edge_grpc_server.cpp.i
-.PHONY : src/edge_grpc_server.i
-
-# target to preprocess a source file
-src/edge_grpc_server.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.i
-.PHONY : src/edge_grpc_server.cpp.i
-
-src/edge_grpc_server.s: src/edge_grpc_server.cpp.s
-.PHONY : src/edge_grpc_server.s
-
-# target to generate assembly for a file
-src/edge_grpc_server.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core.dir/build.make CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.s
-.PHONY : src/edge_grpc_server.cpp.s
 
 src/edge_runtime.o: src/edge_runtime.cpp.o
 .PHONY : src/edge_runtime.o
@@ -601,6 +575,30 @@ src/writeback_controller.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-tests.dir/build.make CMakeFiles/edge-core-tests.dir/src/writeback_controller.cpp.s
 .PHONY : src/writeback_controller.cpp.s
 
+tests/bacnet_object_database_test.o: tests/bacnet_object_database_test.cpp.o
+.PHONY : tests/bacnet_object_database_test.o
+
+# target to build an object file
+tests/bacnet_object_database_test.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-object-database-tests.dir/build.make CMakeFiles/edge-core-bacnet-object-database-tests.dir/tests/bacnet_object_database_test.cpp.o
+.PHONY : tests/bacnet_object_database_test.cpp.o
+
+tests/bacnet_object_database_test.i: tests/bacnet_object_database_test.cpp.i
+.PHONY : tests/bacnet_object_database_test.i
+
+# target to preprocess a source file
+tests/bacnet_object_database_test.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-object-database-tests.dir/build.make CMakeFiles/edge-core-bacnet-object-database-tests.dir/tests/bacnet_object_database_test.cpp.i
+.PHONY : tests/bacnet_object_database_test.cpp.i
+
+tests/bacnet_object_database_test.s: tests/bacnet_object_database_test.cpp.s
+.PHONY : tests/bacnet_object_database_test.s
+
+# target to generate assembly for a file
+tests/bacnet_object_database_test.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/edge-core-bacnet-object-database-tests.dir/build.make CMakeFiles/edge-core-bacnet-object-database-tests.dir/tests/bacnet_object_database_test.cpp.s
+.PHONY : tests/bacnet_object_database_test.cpp.s
+
 tests/bacnet_simulator_test.o: tests/bacnet_simulator_test.cpp.o
 .PHONY : tests/bacnet_simulator_test.o
 
@@ -755,24 +753,22 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... test"
 	@echo "... edge-core"
+	@echo "... edge-core-bacnet-object-database-tests"
 	@echo "... edge-core-bacnet-simulator-tests"
 	@echo "... edge-core-discovery-tests"
 	@echo "... edge-core-energy-ai-tests"
 	@echo "... edge-core-fieldbus-tests"
 	@echo "... edge-core-hvac-control-tests"
 	@echo "... edge-core-tests"
-	@echo "... generated/edge_service.grpc.pb.o"
-	@echo "... generated/edge_service.grpc.pb.i"
-	@echo "... generated/edge_service.grpc.pb.s"
-	@echo "... generated/edge_service.pb.o"
-	@echo "... generated/edge_service.pb.i"
-	@echo "... generated/edge_service.pb.s"
 	@echo "... src/bacnet_client.o"
 	@echo "... src/bacnet_client.i"
 	@echo "... src/bacnet_client.s"
 	@echo "... src/bacnet_interface.o"
 	@echo "... src/bacnet_interface.i"
 	@echo "... src/bacnet_interface.s"
+	@echo "... src/bacnet_object_database.o"
+	@echo "... src/bacnet_object_database.i"
+	@echo "... src/bacnet_object_database.s"
 	@echo "... src/canbus_interface.o"
 	@echo "... src/canbus_interface.i"
 	@echo "... src/canbus_interface.s"
@@ -782,9 +778,6 @@ help:
 	@echo "... src/discovery_service.o"
 	@echo "... src/discovery_service.i"
 	@echo "... src/discovery_service.s"
-	@echo "... src/edge_grpc_server.o"
-	@echo "... src/edge_grpc_server.i"
-	@echo "... src/edge_grpc_server.s"
 	@echo "... src/edge_runtime.o"
 	@echo "... src/edge_runtime.i"
 	@echo "... src/edge_runtime.s"
@@ -806,6 +799,9 @@ help:
 	@echo "... src/writeback_controller.o"
 	@echo "... src/writeback_controller.i"
 	@echo "... src/writeback_controller.s"
+	@echo "... tests/bacnet_object_database_test.o"
+	@echo "... tests/bacnet_object_database_test.i"
+	@echo "... tests/bacnet_object_database_test.s"
 	@echo "... tests/bacnet_simulator_test.o"
 	@echo "... tests/bacnet_simulator_test.i"
 	@echo "... tests/bacnet_simulator_test.s"

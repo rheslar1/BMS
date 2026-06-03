@@ -2691,7 +2691,7 @@ function buildApiStatus(req) {
     transports: {
       browserRealtime: "sse",
       aiService: process.env.AI_GRPC_ENDPOINT ? "grpc" : "http-fallback",
-      edgeCore: process.env.EDGE_GRPC_ENDPOINT ? "grpc" : "local-fallback",
+      edgeCore: "rabbitmq_amqp",
       backendEvents: eventBus.status().kafka?.enabled ? "kafka" : "disabled",
       cloudEvents: eventBus.status().mqtt?.enabled ? "mqtt_tls" : "available",
       workQueueEvents: eventBus.status().rabbitmq?.enabled ? "rabbitmq_amqp" : "available",
@@ -2743,7 +2743,7 @@ function buildOpenApiDocument() {
     info: {
       title: "IntelliBuild Energy Web API",
       version: "1.0.0",
-      description: "HTTP/JSON API for IntelliBuild Energy. Browser real-time updates use Server-Sent Events, and backend service integration uses gRPC.",
+      description: "HTTP/JSON API for IntelliBuild Energy. Browser real-time updates use Server-Sent Events, edge orchestration uses RabbitMQ AMQP, and AI optimization can use gRPC.",
     },
     servers: [{ url: "/api" }],
     components: {
@@ -2817,7 +2817,7 @@ function buildOpenApiDocument() {
       "/holiday-schedules": { get: { summary: "List holiday schedules" }, post: { summary: "Create holiday schedule" } },
       "/special-events": { get: { summary: "List special event schedule overrides" }, post: { summary: "Create special event override" } },
       "/edge/read-points-batch": { post: { summary: "Read BACnet points with ReadPropertyMultiple and single ReadProperty fallback" } },
-      "/edge/subscribe-cov": { post: { summary: "Subscribe to BACnet change-of-value notifications through EdgeCoreService" } },
+      "/edge/subscribe-cov": { post: { summary: "Queue BACnet change-of-value subscription through RabbitMQ edge orchestration" } },
       "/edge/cov-notifications": { post: { summary: "Ingest BACnet ConfirmedCOVNotification or UnconfirmedCOVNotification events" } },
       "/events/status": { get: { summary: "MQTT, Kafka, and RabbitMQ event streaming status and BEMS topic list" } },
     },
@@ -3937,8 +3937,8 @@ app.get("/api/edge/command-transport", (req, res) => {
     rabbitmqPreferred: useRabbitEdgeCommands(),
     commandTopic: "bems.edge.commands",
     routingKey: "edge.commands",
-    synchronousFallback: "grpc",
-    supportedCommands: ["bacnet.write_property", "bacnet.subscribe_cov", "nrf52840.ota_update", "field_device.command"],
+    responseModel: "event-driven telemetry and provisioning events",
+    supportedCommands: ["bacnet.read_property", "bacnet.read_property_multiple", "bacnet.write_property", "bacnet.subscribe_cov", "nrf52840.ota_update", "field_device.command"],
   });
 });
 
@@ -5700,7 +5700,7 @@ app.post("/api/autonomous-mode/schedule-setpoints", requirePermission("schedules
     generatedAt: new Date().toISOString(),
     mode,
     apply,
-    flow: "Scheduler/AI -> Node API -> gRPC EdgeCoreService -> BACnet WriteProperty -> Device changes",
+    flow: "Scheduler/AI -> Node API -> RabbitMQ edge command -> BACnet WriteProperty -> Device changes",
     actions,
   });
 });

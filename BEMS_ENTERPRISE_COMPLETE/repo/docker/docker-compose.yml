@@ -28,7 +28,6 @@ services:
       MYSQL_DATABASE: bems
       AI_SERVICE_URL: http://ai-service:8000
       AI_GRPC_ENDPOINT: ai-service:50052
-      EDGE_GRPC_ENDPOINT: edge-core:50051
       EDGE_COMMAND_TRANSPORT: rabbitmq
       WATCHDOG_INTERVAL_MS: 30000
       TELEMETRY_STREAM_INTERVAL_MS: 5000
@@ -90,13 +89,11 @@ services:
       context: ..
       dockerfile: edge-core/Dockerfile
     ports:
-      - "50051:50051"
       - "47808:47808/udp"
     restart: unless-stopped
     labels:
       com.centurylinklabs.watchtower.enable: "true"
     environment:
-      EDGE_GRPC_BIND: "0.0.0.0:50051"
       BACNET_LOCAL_IP: "0.0.0.0"
       BACNET_SIMULATOR_ENABLED: "true"
       EDGE_POLLING_ENABLED: "false"

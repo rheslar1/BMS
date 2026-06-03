@@ -8,7 +8,7 @@ This document is a project conformance profile and implementation checklist. It 
 
 ## Product BACnet Role
 
-IntelliBuild Energy acts as a BACnet/IP client, supervisory gateway, and edge integration appliance.
+IntelliBuild Energy acts as a BACnet/IP client, supervisory gateway, edge integration appliance, and server/device object database for the BEMS edge runtime.
 
 Primary responsibilities:
 
@@ -18,7 +18,7 @@ Primary responsibilities:
 - Subscribe to change-of-value reporting where supported by field devices.
 - Preserve BACnet device/object identity while adding enterprise context in MySQL and the React UI.
 
-The current product does not claim to be a full BACnet server/device exposing its own complete standard object database to third-party BACnet clients.
+The edge runtime includes a BACnet server/device object database with a Device object, Object_List, supported service metadata, standard object metadata, status flags, event state, reliability, out-of-service state, priority arrays, relinquish default values, and device-resident Schedule object metadata. Formal third-party BACnet server certification still requires PICS completion and external protocol testing.
 
 ## Energy Services Interface And B/WS Profile
 
@@ -77,16 +77,16 @@ This is documented as a project B/WS-style facade and integration path. Formal B
 
 | Object Type | Runtime Support | Product Use |
 | --- | --- | --- |
-| Device | Discovery identity | BACnet device inventory |
-| Analog Input | ReadProperty | Temperature, humidity, CO2, meters where exposed as AI |
-| Analog Output | ReadProperty/WriteProperty | Dampers, valves, setpoints, VAV commands |
-| Analog Value | ReadProperty/WriteProperty | Software values and setpoints |
-| Binary Input | ReadProperty | Status, feedback, safeties |
-| Binary Output | ReadProperty/WriteProperty | Fans, lighting relays, enable commands |
-| Binary Value | ReadProperty/WriteProperty | Software binary values |
-| Schedule | Device-resident persistence metadata | Device-scoped schedules are mirrored to BACnet Schedule object metadata and retained on the field device |
+| Device | Object database, Object_List, service metadata | BACnet device inventory and server identity |
+| Analog Input | ReadProperty and object metadata | Temperature, humidity, CO2, meters where exposed as AI |
+| Analog Output | ReadProperty/WriteProperty with priority array | Dampers, valves, setpoints, VAV commands |
+| Analog Value | ReadProperty/WriteProperty with priority array | Software values and setpoints |
+| Binary Input | ReadProperty and object metadata | Status, feedback, safeties |
+| Binary Output | ReadProperty/WriteProperty with priority array | Fans, lighting relays, enable commands |
+| Binary Value | ReadProperty/WriteProperty with priority array | Software binary values |
+| Schedule | Weekly schedule, exception schedule, effective period, device-resident persistence metadata | Device-scoped schedules are mirrored to BACnet Schedule object metadata and retained on the field device |
 
-Current runtime reads and writes the `present-value` property. Full object property coverage, object lists, status flags, event state, reliability, priority arrays, and schedule members should be added before claiming broad BACnet object conformance.
+Current runtime reads and writes `present-value` and exposes the implemented object database through standard metadata properties including object identifier, object name, object type, description, status flags, event state, reliability, out-of-service, units, priority array, relinquish default, object list, vendor/model/firmware metadata, supported service metadata, and schedule metadata. Vendor-specific object/property behavior should still be validated before formal conformance or BTL claims.
 
 ## Enterprise Logical Model
 
@@ -110,11 +110,12 @@ The database stores building/floor/zone/room context while the edge runtime pres
 | --- | --- |
 | `edge-core/src/bacnet_interface.cpp` | BACnet/IP BVLC/NPDU/APDU service encoding, discovery, read/write, ReadPropertyMultiple, COV subscription, and COV notification parsing |
 | `edge-core/src/bacnet_interface.h` | C-compatible BACnet boundary used by the C++ edge core |
+| `edge-core/src/bacnet_object_database.cpp` | BACnet server/device object database with Device, Analog, Binary, and Schedule objects |
+| `edge-core/tests/bacnet_object_database_test.cpp` | Object database tests for Object_List, standard properties, priority arrays, and schedule metadata |
 | `edge-core/src/bacnet_client.cpp` | C++ adapter implementing `IBacnetClient` |
 | `edge-core/src/discovery_service.cpp` | Device discovery service abstraction |
 | `edge-core/src/writeback_controller.cpp` | Safe writeback, clamping, verification read, rollback |
 | `edge-core/tests/bacnet_simulator_test.cpp` | Simulator tests for discovery, read, write, ReadPropertyMultiple, COV subscribe, and COV notification dispatch |
-| `proto/edge_service.proto` | gRPC contract between Node API and EdgeCoreService |
 | `node-api/server.js` | REST endpoints for BACnet discovery, read, batch read, write, COV subscription, and provisioning |
 
 ## Source BACnet Stack Integration

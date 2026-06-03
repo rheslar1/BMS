@@ -16,7 +16,7 @@ docker compose up --build
 - `api`: Ubuntu 22.04 based Node.js Web API exposed on `http://localhost:3000`
 - `ui`: Ubuntu 22.04 based Apache web server serving the production React build on `http://localhost:5173`
 - `ai-service`: Ubuntu 22.04 based Python AI optimizer exposed on HTTP `http://localhost:8000` and gRPC `localhost:50052`
-- `edge-core`: Ubuntu 22.04 based C++ BACnet runtime exposed on gRPC `localhost:50051` and BACnet/IP UDP `47808`
+- `edge-core`: Ubuntu 22.04 based C++ BACnet runtime exposed on BACnet/IP UDP `47808`; edge commands are queued through RabbitMQ AMQP
 - `kafka`: backend event streaming for telemetry, alarms, analytics, AI control, and footprint events
 - `prometheus`: metrics scraping and alert rules
 - `grafana`: pre-provisioned BEMS operations dashboard on `http://localhost:3001`
@@ -57,7 +57,7 @@ The API, UI, AI service, and database all define container health checks. The ba
 - The UI service uses `VITE_API_URL` to point the browser to the backend API.
 - The backend container uses `MYSQL_HOST=db` to connect to the MySQL container by service name.
 - `AI_GRPC_ENDPOINT=ai-service:50052` enables Node-to-Python-AI gRPC calls for optimization and reinforcement feedback.
-- Set `EDGE_GRPC_ENDPOINT` on the `api` service to enable Node-to-edge-core gRPC calls. If it is unset, the API uses local fallback data for edge health and energy forecast endpoints.
+- Set `EDGE_COMMAND_TRANSPORT=rabbitmq` and `RABBITMQ_URL` on the `api` service to enable Node-to-edge command delivery through RabbitMQ AMQP.
 - Set `BEMS_MANAGEMENT_TOKEN` on the `api` service to require `X-Management-Token` for `/api/remote/*` management endpoints.
 - Set `BEMS_REQUIRE_AUTH=true` to require `X-Session-Token` session authentication for protected API endpoints.
 - The default local UI login is `admin` / `admin`; the database stores a salted `scrypt` password hash.

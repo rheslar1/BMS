@@ -24,10 +24,10 @@ required_files=(
   "docker/logging/logstash/pipeline/bems.conf"
   "docker/init/schema.sql"
   "edge-core/Dockerfile"
-  "edge-core/src/edge_grpc_server.cpp"
-  "edge-core/src/edge_grpc_server.h"
   "edge-core/packaging/bems-edge-core.service"
   "edge-core/src/bacnet_interface.cpp"
+  "edge-core/src/bacnet_object_database.cpp"
+  "edge-core/src/bacnet_object_database.h"
   "edge-core/src/modbus_rtu_interface.cpp"
   "edge-core/src/canbus_interface.cpp"
   "edge-core/src/fieldbus_gateway.cpp"
@@ -45,6 +45,7 @@ required_files=(
   "field-device/src/main.cpp"
   "field-device/tests/field_device_simulator_test.cpp"
   "edge-core/tests/bacnet_simulator_test.cpp"
+  "edge-core/tests/bacnet_object_database_test.cpp"
   "edge-core/tests/fieldbus_interface_test.cpp"
   "edge-core/tests/energy_ai_test.cpp"
   "edge-core/tests/discovery_service_test.cpp"
@@ -76,11 +77,12 @@ required_files=(
   "scripts/promote_canary.sh"
   "scripts/rollback_canary.sh"
   "proto/ai_service.proto"
-  "proto/edge_service.proto"
   "ai-service/app.py"
   "ai-service/test_app.py"
   "ui/src/App.jsx"
   "yocto/README.md"
+  "yocto/meta-bems/conf/machine/edge-core.conf"
+  "yocto/meta-bems/recipes-bems/images/bems-edge-core-image.bb"
 )
 
 for file in "${required_files[@]}"; do
@@ -188,34 +190,30 @@ checks=(
   "node-api/auth.js:verifyPassword"
   "node-api/auth.js:X-Session-Token"
   "node-api/aiClient.js:AiOptimizationService"
-  "node-api/edgeClient.js:EdgeCoreService"
-  "docker/docker-compose.yml:EDGE_GRPC_ENDPOINT"
+  "node-api/edgeClient.js:RabbitMqEdgeClient"
+  "node-api/edgeClient.js:bacnet.read_property"
+  "node-api/edgeClient.js:bacnet.read_property_multiple"
+  "node-api/edgeClient.js:bacnet.write_property"
+  "node-api/edgeClient.js:bacnet.subscribe_cov"
   "docker/docker-compose.yml:EDGE_COMMAND_TRANSPORT"
-  "docker/docker-compose.yml:edge-core:50051"
+  "docker/docker-compose.yml:RABBITMQ_URL"
   "docker/docker-compose.yml:BACNET_SIMULATOR_ENABLED"
   "node-api/Dockerfile:FROM ubuntu:22.04"
   "ui/Dockerfile:FROM ubuntu:22.04"
   "ai-service/Dockerfile:FROM ubuntu:22.04"
   "edge-core/Dockerfile:FROM ubuntu:22.04"
-  "edge-core/Dockerfile:libprotobuf-dev"
-  ".github/workflows/ci.yml:libprotobuf-dev"
+  "edge-core/Dockerfile:EXPOSE 47808/udp"
   ".github/workflows/ci.yml:Configure C++ field device firmware"
   ".github/workflows/ci.yml:Test C++ field device firmware"
-  "edge-core/src/edge_grpc_server.cpp:EdgeCoreService::Service"
-  "edge-core/src/edge_grpc_server.cpp:runEdgeGrpcServer"
-  "edge-core/src/main.cpp:EDGE_GRPC_BIND"
-  "edge-core/packaging/bems-edge-core.service:EDGE_GRPC_BIND"
+  "edge-core/src/main.cpp:RabbitMQ AMQP command orchestration"
   "edge-core/packaging/bems-edge-core.service:BACNET_SIMULATOR_ENABLED=false"
   "edge-core/src/bacnet_interface.cpp:BACNET_SIMULATOR_ENABLED"
   "edge-core/src/bacnet_interface.cpp:SIM Floor 1 VAV Damper"
   "edge-core/tests/bacnet_simulator_test.cpp:bacnet_discover_device"
   "edge-core/tests/bacnet_simulator_test.cpp:bacnet_read_properties_multiple"
   "edge-core/tests/bacnet_simulator_test.cpp:bacnet_poll_cov_notification"
-  "yocto/meta-bems/recipes-bems/edge-core/edge-core.bb:grpc"
   "ai-service/app.py:AiOptimizationService"
   "proto/ai_service.proto:service AiOptimizationService"
-  "proto/edge_service.proto:service EdgeCoreService"
-  "proto/edge_service.proto:SubscribeCov"
   "edge-core/src/bacnet_interface.cpp:Who-Is"
   "edge-core/src/bacnet_interface.cpp:ReadProperty"
   "edge-core/src/bacnet_interface.cpp:ReadPropertyMultiple"
@@ -225,6 +223,12 @@ checks=(
   "edge-core/src/bacnet_interface.cpp:ConfirmedCOVNotification"
   "edge-core/src/bacnet_interface.cpp:UnconfirmedCOVNotification"
   "edge-core/src/bacnet_interface.cpp:bacnet_poll_cov_notification"
+  "edge-core/src/bacnet_object_database.cpp:BacnetDeviceObjectDatabase"
+  "edge-core/src/bacnet_object_database.cpp:PriorityArray"
+  "edge-core/src/bacnet_object_database.cpp:ObjectList"
+  "edge-core/src/bacnet_object_database.cpp:ProtocolServicesSupported"
+  "edge-core/tests/bacnet_object_database_test.cpp:bacnet_server_object_count"
+  "edge-core/tests/bacnet_object_database_test.cpp:bacnet_server_write_present_value"
   "edge-core/README.md:sourceforge.net/projects/bacnet"
   "edge-core/src/modbus_rtu_interface.cpp:modbus_crc16"
   "edge-core/src/canbus_interface.cpp:canbus_validate_frame"
@@ -455,6 +459,12 @@ checks=(
   "docs/device-architecture.md:Field-Selectable Power Meters"
   "docs/device-architecture.md:5-in-1 field-selectable communication profile"
   "docs/device-architecture.md:RabbitMQ"
+  "yocto/README.md:MACHINE=edge-core bitbake bems-edge-core-image"
+  "yocto/meta-bems/recipes-bems/images/bems-edge-core-image.bb:core-image-sato"
+  "yocto/meta-bems/recipes-bems/images/bems-edge-core-image.bb:CORE_IMAGE_EXTRA_INSTALL"
+  "yocto/meta-bems/recipes-bems/images/bems-edge-core-image.bb:edge-core"
+  "yocto/meta-bems/recipes-bems/images/bems-edge-core-image.bb:node-api"
+  "yocto/meta-bems/recipes-bems/edge-core/edge-core.bb:inherit cmake systemd"
   "field-device/include/field_device_firmware.h:class IBacnetObjectTable"
   "field-device/include/field_device_firmware.h:class IPersistentStore"
   "field-device/include/field_device_firmware.h:class IScheduleRepository"
@@ -499,8 +509,13 @@ if grep -R -n -E "FreeRTOS|RTOS|rtosRequired|firmwareProfile" docs node-api ui/s
   exit 1
 fi
 
-if grep -R -n -E "Planned BACnet extensions|not yet complete|future serial adapter|Reporting foundations|configured fieldbus gateway adapter" docs/architecture.md docs/api-surface.md docs/device-architecture.md; then
+if grep -R -n -E "Planned BACnet extensions|not yet complete|future serial adapter|Reporting foundations|configured fieldbus gateway adapter|remain planned|planned production" docs/architecture.md docs/api-surface.md docs/device-architecture.md docs/product-overview.md docs/generate_enterprise_docs.py README.md edge-core/README.md docker/README.md; then
   echo "Architecture drift marker found; docs must describe implemented surfaces." >&2
+  exit 1
+fi
+
+if grep -R -n -E "EDGE_GRPC|edge gRPC|C\\+\\+ edge gRPC|EdgeCoreService|proto/edge_service|edge-core gRPC|DiscoverDevices gRPC|ReadPoint gRPC|SubscribeCov gRPC|protobuf-compiler-grpc|grpc-native|libprotobuf-dev|EXPOSE 50051" docs README.md edge-core docker yocto node-api proto --exclude-dir=node_modules --exclude-dir=build; then
+  echo "Stale edge gRPC marker found; edge orchestration must use RabbitMQ AMQP." >&2
   exit 1
 fi
 

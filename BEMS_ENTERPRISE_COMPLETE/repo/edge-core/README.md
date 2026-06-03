@@ -6,7 +6,7 @@ The implementation is designed to use a standard open-source BACnet stack such a
 - SourceForge BACnet Protocol Stack: https://sourceforge.net/projects/bacnet/
 - https://github.com/bacnet-stack/bacnet-stack
 
-The SourceForge project describes a portable C BACnet library that provides application, network, and MAC-layer communication services for embedded systems and operating systems. IntelliBuild Energy keeps `src/bacnet_interface.h` as the stable C-compatible seam so this stack can back the production implementation without changing `EdgeRuntime`, gRPC, Node API, or UI code.
+The SourceForge project describes a portable C BACnet library that provides application, network, and MAC-layer communication services for embedded systems and operating systems. IntelliBuild Energy keeps `src/bacnet_interface.h` as the stable C-compatible seam so this stack can back the production implementation without changing `EdgeRuntime`, RabbitMQ edge orchestration, Node API, or UI code.
 
 ## Structure
 
@@ -18,8 +18,8 @@ The SourceForge project describes a portable C BACnet library that provides appl
 - `src/writeback_controller.*` - safe BACnet writeback strategy with clamping and rollback
 - `src/hvac_control.*` - modular AHU, VAV, and chiller control strategies with PID loops
 - `src/energy_ai.*` - energy prediction and optimization logic
-- `src/edge_grpc_server.*` - `EdgeCoreService` gRPC server adapter
 - `src/bacnet_interface.*` - C-style BACnet stack bridge
+- `src/bacnet_object_database.*` - BACnet server/device object database
 - `src/modbus_rtu_interface.*` - Modbus RTU frame encoding and simulator helpers
 - `src/canbus_interface.*` - classic CAN frame validation and simulator helpers
 - `src/fieldbus_gateway.*` - SOLID fieldbus facade for Modbus RTU and CAN bus adapters
@@ -33,7 +33,7 @@ The core uses small interfaces to keep hardware and protocol code replaceable:
 - `IDeviceDiscovery` separates commissioning discovery from runtime polling.
 - `IWritebackController` isolates write safety rules from device management.
 - `IFieldbusGateway` isolates Modbus RTU and CAN bus command handling from runtime orchestration.
-- `EdgeRuntime` acts as the facade for the executable entrypoint and gRPC server.
+- `EdgeRuntime` acts as the facade for the executable entrypoint and RabbitMQ command orchestration.
 
 Patterns used:
 
@@ -42,7 +42,7 @@ Patterns used:
 - Strategy: writeback mode and fieldbus gateway implementations can be swapped without changing callers.
 - Dependency inversion: high-level services depend on `IBacnetClient`, `IDeviceDiscovery`, `IWritebackController`, and `IFieldbusGateway`, not concrete protocol implementations.
 - Strategy pattern: AHU, VAV, and chiller automation are isolated behind `IHvacControlStrategy` so equipment sequences can evolve without changing BACnet transport or writeback safety.
-- Single responsibility: BACnet encoding, fieldbus frame generation, discovery, writeback safety, gRPC transport, and energy logic are separate modules.
+- Single responsibility: BACnet encoding, BACnet object database, fieldbus frame generation, discovery, writeback safety, RabbitMQ command transport, and energy logic are separate modules.
 
 ## Build
 
@@ -76,7 +76,10 @@ BACnet/IP services used by the edge core:
 | I-Am | Discovery response | Parsed to build reachable BACnet device inventory |
 | ReadProperty | Read value | Reads `present-value` from analog, binary, and schedule objects |
 | WriteProperty | Send command | Writes `present-value` through the safe writeback path |
+| ReadPropertyMultiple | Batch read values | Same-device batch reads for `present-value` points |
 | SubscribeCOV | Change of value | Optional subscription request for BACnet object updates |
+| ConfirmedCOVNotification | Change event | Notification parsing and ACK handling |
+| UnconfirmedCOVNotification | Change event | Notification parsing |
 
 Set `BACNET_LOCAL_IP` when the edge device must bind a specific interface. If it is not set, the edge core binds `0.0.0.0` and uses BACnet/IP broadcast discovery on UDP port `47808`.
 
@@ -99,12 +102,11 @@ The edge core also includes modular fieldbus support for equipment commonly foun
 
 Module tests are provided in `tests/fieldbus_interface_test.cpp` for Modbus CRC/frame encoding, simulated Modbus register reads, CAN frame validation, and the fieldbus gateway facade.
 
-## Service Contract
+## Edge Command Contract
 
-The Node.js API and C++ gRPC server share `../proto/edge_service.proto`.
-It defines health, device inventory, discovery, point read/write, and energy forecast RPCs.
+The Node.js API queues edge commands through RabbitMQ AMQP on `bems.edge.commands`.
 
-At runtime the edge core starts `bems.edge.v1.EdgeCoreService` on `EDGE_GRPC_BIND`, defaulting to `0.0.0.0:50051`. Docker Compose points the Node.js API at `EDGE_GRPC_ENDPOINT=edge-core:50051`.
+Supported edge command types include `bacnet.discover_devices`, `bacnet.read_property`, `bacnet.read_property_multiple`, `bacnet.write_property`, `bacnet.subscribe_cov`, `edge.energy_forecast`, and `nrf52840.ota_update`. Authoritative reads and COV updates return through telemetry, provisioning, and event streams rather than synchronous edge RPCs.
 
 ## i.MX93 Deployment
 

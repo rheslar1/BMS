@@ -1,4 +1,5 @@
 #include "bacnet_interface.h"
+#include "bacnet_object_database.h"
 
 #include <arpa/inet.h>
 #include <cerrno>
@@ -6,6 +7,7 @@
 #include <cstring>
 #include <iostream>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <netinet/in.h>
 #include <optional>
@@ -74,6 +76,7 @@ struct SimulatedCovSubscription {
 
 std::vector<SimulatedCovSubscription> simulatedCovSubscriptions;
 std::vector<BacnetCovNotification> simulatedCovNotifications;
+std::unique_ptr<BacnetDeviceObjectDatabase> serverObjectDatabase;
 
 void appendUint16(std::vector<uint8_t> &buffer, uint16_t value) {
     buffer.push_back(static_cast<uint8_t>((value >> 8) & 0xFF));
@@ -151,6 +154,14 @@ void ensureSimulatedDevicesLocked() {
     for (const auto &device : devices) {
         simulatedDevices.emplace(device.deviceInstance, device);
     }
+}
+
+BacnetDeviceObjectDatabase &ensureServerObjectDatabaseLocked() {
+    if (!serverObjectDatabase) {
+        serverObjectDatabase = std::make_unique<BacnetDeviceObjectDatabase>(
+            BacnetDeviceObjectDatabase::createDefaultServerDevice(4194303));
+    }
+    return *serverObjectDatabase;
 }
 
 void populateSimulatedInfo(const SimulatedBacnetDevice &device, BacnetDeviceInfo *outInfo) {
@@ -936,6 +947,41 @@ bool bacnet_poll_cov_notification(BacnetCovNotification *outNotification, int ti
     return true;
 }
 
+size_t bacnet_server_object_count(void) {
+    std::lock_guard<std::mutex> lock(context.mutex);
+    return ensureServerObjectDatabaseLocked().objectCount();
+}
+
+bool bacnet_server_read_property_text(int objectType, int objectInstance, int propertyIdentifier, char *buffer, size_t bufferLength) {
+    if (!buffer || bufferLength == 0) {
+        return false;
+    }
+
+    std::lock_guard<std::mutex> lock(context.mutex);
+    const auto text = ensureServerObjectDatabaseLocked().readPropertyText(
+        {static_cast<BacnetObjectType>(objectType), objectInstance},
+        static_cast<BacnetPropertyIdentifier>(propertyIdentifier));
+    if (!text) {
+        return false;
+    }
+
+    std::strncpy(buffer, text->c_str(), bufferLength - 1);
+    buffer[bufferLength - 1] = '\0';
+    return true;
+}
+
+bool bacnet_server_write_present_value(int objectType, int objectInstance, double value, int priority) {
+    std::lock_guard<std::mutex> lock(context.mutex);
+    return ensureServerObjectDatabaseLocked().writePresentValue(
+        {static_cast<BacnetObjectType>(objectType), objectInstance}, value, priority);
+}
+
+bool bacnet_server_release_priority(int objectType, int objectInstance, int priority) {
+    std::lock_guard<std::mutex> lock(context.mutex);
+    return ensureServerObjectDatabaseLocked().releasePriority(
+        {static_cast<BacnetObjectType>(objectType), objectInstance}, priority);
+}
+
 void bacnet_shutdown(void) {
     std::lock_guard<std::mutex> lock(context.mutex);
     if (context.socketFd >= 0) {
@@ -947,4 +993,5 @@ void bacnet_shutdown(void) {
     context.simulatorEnabled = false;
     simulatedCovSubscriptions.clear();
     simulatedCovNotifications.clear();
+    serverObjectDatabase.reset();
 }

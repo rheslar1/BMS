@@ -1,9 +1,9 @@
 #include "bacnet_client.h"
 #include "discovery_service.h"
-#include "edge_grpc_server.h"
 #include "edge_runtime.h"
 #include <chrono>
 #include <cstdlib>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <thread>
@@ -44,8 +44,10 @@ int main() {
     poller.detach();
   }
 
-  const char *grpcBind = std::getenv("EDGE_GRPC_BIND");
-  runEdgeGrpcServer(runtime, grpcBind && *grpcBind ? std::string(grpcBind) : "0.0.0.0:50051");
+  std::cout << "Edge runtime ready for RabbitMQ AMQP command orchestration and BACnet/IP field integration." << std::endl;
+  while (true) {
+    std::this_thread::sleep_for(std::chrono::seconds(60));
+  }
 
   return 0;
 }

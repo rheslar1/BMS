@@ -51,6 +51,10 @@ bool bacnet_read_properties_multiple(const BacnetReadPropertyRequest *requests, 
 bool bacnet_write_property(int deviceInstance, int objectType, int objectInstance, double value);
 bool bacnet_subscribe_cov(int deviceInstance, int objectType, int objectInstance, uint32_t subscriberProcessId, uint32_t lifetimeSeconds, bool confirmedNotifications);
 bool bacnet_poll_cov_notification(BacnetCovNotification *outNotification, int timeoutMs);
+size_t bacnet_server_object_count(void);
+bool bacnet_server_read_property_text(int objectType, int objectInstance, int propertyIdentifier, char *buffer, size_t bufferLength);
+bool bacnet_server_write_present_value(int objectType, int objectInstance, double value, int priority);
+bool bacnet_server_release_priority(int objectType, int objectInstance, int priority);
 void bacnet_shutdown(void);
 
 #ifdef __cplusplus

@@ -32,7 +32,7 @@ def build_sdd():
     doc.add_paragraph(
         "This document defines the software design for a commercial-grade Building Management "
         "and Energy Management System. The platform combines a React operator UI, Node.js REST/SSE "
-        "API, MySQL storage, Python AI optimizer, C++ gRPC edge core, and BACnet/IP field integration."
+        "API, MySQL storage, Python AI optimizer, RabbitMQ-orchestrated C++ edge core, and BACnet/IP field integration."
     )
     doc.add_paragraph(
         "The platform unifies HVAC control, lighting supervision, power monitoring, and energy "
@@ -59,7 +59,7 @@ def build_sdd():
             "Runs dashboards for real buildings and BACnet-connected HVAC equipment.",
             "Stores building hierarchy, telemetry, alarms, analytics, users, roles, sessions, and AI history in MySQL.",
             "Uses Server-Sent Events for browser live updates and does not use WebSockets.",
-            "Uses gRPC for Node-to-AI and Node-to-C++ edge service communication.",
+            "Uses gRPC for Node-to-AI optimization and RabbitMQ AMQP for Node-to-C++ edge command orchestration.",
             "Deploys through Ubuntu 22.04 Docker containers and has an i.MX93 Yocto packaging path.",
         ],
     )
@@ -73,7 +73,7 @@ def build_sdd():
             "Node.js API enforces authentication, RBAC, tenant context, orchestration, and persistence.",
             "MySQL stores configuration, alarms, analytics, optimization history, and RL Q-values.",
             "Node.js calls the Python AI service over gRPC for whole-building optimization.",
-            "Node.js calls the C++ EdgeCoreService over gRPC for edge health, discovery, read, write, and forecast operations.",
+            "Node.js queues C++ edge-core discovery, read, write, COV, OTA, and forecast commands through RabbitMQ AMQP.",
             "The C++ edge core communicates with BACnet/IP networks over UDP/BVLC.",
             "HVAC devices expose BACnet objects for telemetry, status, and command writeback.",
         ],
@@ -87,23 +87,23 @@ def build_sdd():
         doc,
         [
             "ui/: React dashboard with login, admin, user maintenance, alarms, schedules, charts, digital twin, floorplan editor, provisioning, and AI control panels.",
-            "node-api/: Express API with REST endpoints, SSE streams, gRPC clients, authentication, authorization, migrations, trend logging, holiday/special-event scheduling, Smart Grid AI, watchdog, and remote management.",
+            "node-api/: Express API with REST endpoints, SSE streams, RabbitMQ edge client, AI gRPC client, authentication, authorization, migrations, trend logging, holiday/special-event scheduling, Smart Grid AI, watchdog, and remote management.",
             "ai-service/: Python optimizer exposing AiOptimizationService over gRPC and HTTP health/fallback endpoints.",
-            "edge-core/: C++ BACnet runtime exposing EdgeCoreService over gRPC and integrating BACnet Who-Is, ReadProperty, WriteProperty, and SubscribeCOV.",
+            "edge-core/: C++ BACnet runtime with RabbitMQ edge command orchestration, BACnet server/device object database, Who-Is, ReadProperty, ReadPropertyMultiple, WriteProperty, SubscribeCOV, and COV notification support.",
             "database/: Canonical MySQL schema for enterprise SaaS, telemetry, alarms, analytics, RL, FDD, and maintenance data.",
             "docker/: Ubuntu-container Docker Compose stack for API, UI, AI service, edge core, and MySQL.",
             "yocto/: i.MX93 deployment layer and systemd packaging path.",
         ],
     )
 
-    doc.add_heading("4. gRPC Service Contracts", level=1)
+    doc.add_heading("4. Service Contracts", level=1)
     add_bullets(
         doc,
         [
-            "proto/edge_service.proto defines EdgeCoreService: Health, ListDevices, DiscoverDevices, ReadPoint, WritePoint, SubscribeCov, and GetEnergyForecast.",
+            "RabbitMQ topic bems.edge.commands carries edge command types bacnet.discover_devices, bacnet.read_property, bacnet.read_property_multiple, bacnet.write_property, bacnet.subscribe_cov, edge.energy_forecast, and nrf52840.ota_update.",
             "proto/ai_service.proto defines AiOptimizationService: Health, Optimize, and Feedback.",
             "node-api/edgeClient.js and node-api/aiClient.js are the client-side adapters.",
-            "edge-core/src/edge_grpc_server.cpp is the C++ EdgeCoreService implementation.",
+            "edge-core/src/main.cpp runs the C++ BACnet runtime for RabbitMQ command orchestration and BACnet/IP field integration.",
             "ai-service/app.py is the Python AiOptimizationService implementation.",
         ],
     )
@@ -207,7 +207,7 @@ def build_sdd():
         [
             "The architecture is commercial BEMS/SCADA class and comparable in scope to Siemens Desigo CC, Schneider EcoStruxure, and Niagara Framework.",
             "Site deployment still requires field certification, cybersecurity hardening, commissioning, and acceptance testing before controlling occupied buildings.",
-            "Expanded object-list heuristics, AHU/VAV auto-mapping, and expanded FDD rules remain planned production extensions.",
+            "Object-list heuristics, AHU/VAV auto-mapping, and FDD rules are implemented surfaces that should be tuned during commissioning for each vendor/device family.",
         ],
     )
 
@@ -239,7 +239,7 @@ def build_sdp():
             "CI installs Node API dependencies, runs audit-compatible dependency installation, and executes Node tests.",
             "CI installs Python AI requirements and runs Python optimizer tests.",
             "CI installs UI dependencies and runs the Vite production build.",
-            "CI runs architecture verification to enforce required files, API markers, gRPC markers, SSE usage, and the no-WebSocket rule.",
+            "CI runs architecture verification to enforce required files, API markers, RabbitMQ edge markers, SSE usage, and the no-WebSocket rule.",
         ],
     )
 
@@ -251,9 +251,9 @@ def build_sdp():
             "API listens on port 3000.",
             "UI listens on port 5173.",
             "AI service exposes HTTP health on 8000 and gRPC on 50052.",
-            "Edge core exposes gRPC on 50051 and BACnet/IP UDP on 47808.",
+            "Edge core exposes BACnet/IP UDP on 47808 and receives edge commands through RabbitMQ AMQP.",
             "MySQL stores system configuration and operational history.",
-            "Node API uses AI_GRPC_ENDPOINT=ai-service:50052 and EDGE_GRPC_ENDPOINT=edge-core:50051.",
+            "Node API uses AI_GRPC_ENDPOINT=ai-service:50052 for AI and RABBITMQ_URL with EDGE_COMMAND_TRANSPORT=rabbitmq for edge orchestration.",
         ],
     )
 
@@ -264,7 +264,7 @@ def build_sdp():
             "BEMS_REQUIRE_AUTH controls strict API authentication behavior.",
             "BEMS_MANAGEMENT_TOKEN protects remote management actions.",
             "BACNET_LOCAL_IP binds the edge BACnet interface.",
-            "EDGE_GRPC_BIND controls the C++ edge gRPC listener.",
+            "EDGE_COMMAND_TRANSPORT=rabbitmq selects RabbitMQ edge command orchestration.",
             "BACNET_SIMULATOR_ENABLED enables simulated BACnet devices for local demos and CI.",
             "TELEMETRY_STREAM_INTERVAL_MS controls SSE telemetry refresh cadence.",
         ],
@@ -279,7 +279,7 @@ def build_sdp():
             "C++ edge: cmake configure/build and ctest.",
             "UI: npm --prefix ui run build.",
             "Architecture: ./scripts/verify_architecture.sh.",
-            "Deployment smoke: docker-compose up --build -d and verify API health, UI, AI health, edge gRPC health through Node API, SSE telemetry, and provisioning discovery.",
+            "Deployment smoke: docker-compose up --build -d and verify API health, UI, AI health, RabbitMQ event bus health through Node API, SSE telemetry, and provisioning discovery.",
             "BACnet simulator smoke: verify /api/provisioning/discover returns simulated devices when BACNET_SIMULATOR_ENABLED=true.",
         ],
     )

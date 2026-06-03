@@ -1,0 +1,1 @@
+/usr/bin/c++ "CMakeFiles/edge-core-bacnet-object-database-tests.dir/tests/bacnet_object_database_test.cpp.o" "CMakeFiles/edge-core-bacnet-object-database-tests.dir/src/bacnet_object_database.cpp.o" "CMakeFiles/edge-core-bacnet-object-database-tests.dir/src/bacnet_interface.cpp.o" -o edge-core-bacnet-object-database-tests 

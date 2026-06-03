@@ -37,7 +37,7 @@ The script verifies architecture markers, starts the Docker Compose demo service
 | Digital twin | `http://localhost:3000/api/digital-twin` | Building/device mirror |
 | Telemetry stream | `http://localhost:3000/api/telemetry/stream` | Server-Sent Events live telemetry |
 | AI service | `http://localhost:8000/health` | Python optimizer health |
-| Edge gRPC | `localhost:50051` | C++ EdgeCoreService |
+| Edge commands | RabbitMQ AMQP `bems.edge.commands` | C++ edge-core command orchestration |
 | AI gRPC | `localhost:50052` | Python AI gRPC |
 | BACnet/IP | UDP `47808` | Edge BACnet/IP port |
 

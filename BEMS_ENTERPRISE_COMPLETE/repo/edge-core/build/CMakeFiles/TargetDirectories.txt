@@ -1,6 +1,7 @@
 /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles/edge-core.dir
 /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles/edge-core-tests.dir
 /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles/edge-core-bacnet-simulator-tests.dir
+/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles/edge-core-bacnet-object-database-tests.dir
 /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles/edge-core-fieldbus-tests.dir
 /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles/edge-core-energy-ai-tests.dir
 /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles/edge-core-discovery-tests.dir

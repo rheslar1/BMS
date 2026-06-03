@@ -69,24 +69,10 @@ include CMakeFiles/edge-core.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/edge-core.dir/flags.make
 
-generated/edge_service.pb.cc: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/proto/edge_service.proto
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --blue --bold --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Generating generated/edge_service.pb.cc, generated/edge_service.grpc.pb.cc, generated/edge_service.pb.h, generated/edge_service.grpc.pb.h"
-	/usr/bin/cmake -E make_directory /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/generated
-	/usr/bin/protoc --proto_path=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/../proto --cpp_out=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/generated --grpc_out=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/generated --plugin=protoc-gen-grpc=/usr/bin/grpc_cpp_plugin /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/../proto/edge_service.proto
-
-generated/edge_service.grpc.pb.cc: generated/edge_service.pb.cc
-	@$(CMAKE_COMMAND) -E touch_nocreate generated/edge_service.grpc.pb.cc
-
-generated/edge_service.pb.h: generated/edge_service.pb.cc
-	@$(CMAKE_COMMAND) -E touch_nocreate generated/edge_service.pb.h
-
-generated/edge_service.grpc.pb.h: generated/edge_service.pb.cc
-	@$(CMAKE_COMMAND) -E touch_nocreate generated/edge_service.grpc.pb.h
-
 CMakeFiles/edge-core.dir/src/main.cpp.o: CMakeFiles/edge-core.dir/flags.make
 CMakeFiles/edge-core.dir/src/main.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/main.cpp
 CMakeFiles/edge-core.dir/src/main.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/edge-core.dir/src/main.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/edge-core.dir/src/main.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/main.cpp.o -MF CMakeFiles/edge-core.dir/src/main.cpp.o.d -o CMakeFiles/edge-core.dir/src/main.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/main.cpp
 
 CMakeFiles/edge-core.dir/src/main.cpp.i: cmake_force
@@ -100,7 +86,7 @@ CMakeFiles/edge-core.dir/src/main.cpp.s: cmake_force
 CMakeFiles/edge-core.dir/src/bacnet_client.cpp.o: CMakeFiles/edge-core.dir/flags.make
 CMakeFiles/edge-core.dir/src/bacnet_client.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/bacnet_client.cpp
 CMakeFiles/edge-core.dir/src/bacnet_client.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/edge-core.dir/src/bacnet_client.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/edge-core.dir/src/bacnet_client.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/bacnet_client.cpp.o -MF CMakeFiles/edge-core.dir/src/bacnet_client.cpp.o.d -o CMakeFiles/edge-core.dir/src/bacnet_client.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/bacnet_client.cpp
 
 CMakeFiles/edge-core.dir/src/bacnet_client.cpp.i: cmake_force
@@ -114,7 +100,7 @@ CMakeFiles/edge-core.dir/src/bacnet_client.cpp.s: cmake_force
 CMakeFiles/edge-core.dir/src/device_manager.cpp.o: CMakeFiles/edge-core.dir/flags.make
 CMakeFiles/edge-core.dir/src/device_manager.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/device_manager.cpp
 CMakeFiles/edge-core.dir/src/device_manager.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/edge-core.dir/src/device_manager.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/edge-core.dir/src/device_manager.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/device_manager.cpp.o -MF CMakeFiles/edge-core.dir/src/device_manager.cpp.o.d -o CMakeFiles/edge-core.dir/src/device_manager.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/device_manager.cpp
 
 CMakeFiles/edge-core.dir/src/device_manager.cpp.i: cmake_force
@@ -128,7 +114,7 @@ CMakeFiles/edge-core.dir/src/device_manager.cpp.s: cmake_force
 CMakeFiles/edge-core.dir/src/discovery_service.cpp.o: CMakeFiles/edge-core.dir/flags.make
 CMakeFiles/edge-core.dir/src/discovery_service.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/discovery_service.cpp
 CMakeFiles/edge-core.dir/src/discovery_service.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/edge-core.dir/src/discovery_service.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/edge-core.dir/src/discovery_service.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/discovery_service.cpp.o -MF CMakeFiles/edge-core.dir/src/discovery_service.cpp.o.d -o CMakeFiles/edge-core.dir/src/discovery_service.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/discovery_service.cpp
 
 CMakeFiles/edge-core.dir/src/discovery_service.cpp.i: cmake_force
@@ -142,7 +128,7 @@ CMakeFiles/edge-core.dir/src/discovery_service.cpp.s: cmake_force
 CMakeFiles/edge-core.dir/src/edge_runtime.cpp.o: CMakeFiles/edge-core.dir/flags.make
 CMakeFiles/edge-core.dir/src/edge_runtime.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/edge_runtime.cpp
 CMakeFiles/edge-core.dir/src/edge_runtime.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/edge-core.dir/src/edge_runtime.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/edge-core.dir/src/edge_runtime.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/edge_runtime.cpp.o -MF CMakeFiles/edge-core.dir/src/edge_runtime.cpp.o.d -o CMakeFiles/edge-core.dir/src/edge_runtime.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/edge_runtime.cpp
 
 CMakeFiles/edge-core.dir/src/edge_runtime.cpp.i: cmake_force
@@ -153,24 +139,10 @@ CMakeFiles/edge-core.dir/src/edge_runtime.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/edge-core.dir/src/edge_runtime.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/edge_runtime.cpp -o CMakeFiles/edge-core.dir/src/edge_runtime.cpp.s
 
-CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.o: CMakeFiles/edge-core.dir/flags.make
-CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/edge_grpc_server.cpp
-CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.o -MF CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.o.d -o CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/edge_grpc_server.cpp
-
-CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/edge_grpc_server.cpp > CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.i
-
-CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/edge_grpc_server.cpp -o CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.s
-
 CMakeFiles/edge-core.dir/src/energy_ai.cpp.o: CMakeFiles/edge-core.dir/flags.make
 CMakeFiles/edge-core.dir/src/energy_ai.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/energy_ai.cpp
 CMakeFiles/edge-core.dir/src/energy_ai.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/edge-core.dir/src/energy_ai.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Building CXX object CMakeFiles/edge-core.dir/src/energy_ai.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/energy_ai.cpp.o -MF CMakeFiles/edge-core.dir/src/energy_ai.cpp.o.d -o CMakeFiles/edge-core.dir/src/energy_ai.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/energy_ai.cpp
 
 CMakeFiles/edge-core.dir/src/energy_ai.cpp.i: cmake_force
@@ -184,7 +156,7 @@ CMakeFiles/edge-core.dir/src/energy_ai.cpp.s: cmake_force
 CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o: CMakeFiles/edge-core.dir/flags.make
 CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/bacnet_interface.cpp
 CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o -MF CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o.d -o CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/bacnet_interface.cpp
 
 CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.i: cmake_force
@@ -195,10 +167,24 @@ CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/bacnet_interface.cpp -o CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.s
 
+CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.o: CMakeFiles/edge-core.dir/flags.make
+CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/bacnet_object_database.cpp
+CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Building CXX object CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.o -MF CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.o.d -o CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/bacnet_object_database.cpp
+
+CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/bacnet_object_database.cpp > CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.i
+
+CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/bacnet_object_database.cpp -o CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.s
+
 CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.o: CMakeFiles/edge-core.dir/flags.make
 CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/modbus_rtu_interface.cpp
 CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_9) "Building CXX object CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.o -MF CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.o.d -o CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/modbus_rtu_interface.cpp
 
 CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.i: cmake_force
@@ -212,7 +198,7 @@ CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.s: cmake_force
 CMakeFiles/edge-core.dir/src/canbus_interface.cpp.o: CMakeFiles/edge-core.dir/flags.make
 CMakeFiles/edge-core.dir/src/canbus_interface.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/canbus_interface.cpp
 CMakeFiles/edge-core.dir/src/canbus_interface.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/edge-core.dir/src/canbus_interface.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_10) "Building CXX object CMakeFiles/edge-core.dir/src/canbus_interface.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/canbus_interface.cpp.o -MF CMakeFiles/edge-core.dir/src/canbus_interface.cpp.o.d -o CMakeFiles/edge-core.dir/src/canbus_interface.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/canbus_interface.cpp
 
 CMakeFiles/edge-core.dir/src/canbus_interface.cpp.i: cmake_force
@@ -226,7 +212,7 @@ CMakeFiles/edge-core.dir/src/canbus_interface.cpp.s: cmake_force
 CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.o: CMakeFiles/edge-core.dir/flags.make
 CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/fieldbus_gateway.cpp
 CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_11) "Building CXX object CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.o -MF CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.o.d -o CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/fieldbus_gateway.cpp
 
 CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.i: cmake_force
@@ -240,7 +226,7 @@ CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.s: cmake_force
 CMakeFiles/edge-core.dir/src/writeback_controller.cpp.o: CMakeFiles/edge-core.dir/flags.make
 CMakeFiles/edge-core.dir/src/writeback_controller.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/writeback_controller.cpp
 CMakeFiles/edge-core.dir/src/writeback_controller.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/edge-core.dir/src/writeback_controller.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_12) "Building CXX object CMakeFiles/edge-core.dir/src/writeback_controller.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/writeback_controller.cpp.o -MF CMakeFiles/edge-core.dir/src/writeback_controller.cpp.o.d -o CMakeFiles/edge-core.dir/src/writeback_controller.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/writeback_controller.cpp
 
 CMakeFiles/edge-core.dir/src/writeback_controller.cpp.i: cmake_force
@@ -254,7 +240,7 @@ CMakeFiles/edge-core.dir/src/writeback_controller.cpp.s: cmake_force
 CMakeFiles/edge-core.dir/src/hvac_control.cpp.o: CMakeFiles/edge-core.dir/flags.make
 CMakeFiles/edge-core.dir/src/hvac_control.cpp.o: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/hvac_control.cpp
 CMakeFiles/edge-core.dir/src/hvac_control.cpp.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Building CXX object CMakeFiles/edge-core.dir/src/hvac_control.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_13) "Building CXX object CMakeFiles/edge-core.dir/src/hvac_control.cpp.o"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/src/hvac_control.cpp.o -MF CMakeFiles/edge-core.dir/src/hvac_control.cpp.o.d -o CMakeFiles/edge-core.dir/src/hvac_control.cpp.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/hvac_control.cpp
 
 CMakeFiles/edge-core.dir/src/hvac_control.cpp.i: cmake_force
@@ -265,34 +251,6 @@ CMakeFiles/edge-core.dir/src/hvac_control.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/edge-core.dir/src/hvac_control.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/hvac_control.cpp -o CMakeFiles/edge-core.dir/src/hvac_control.cpp.s
 
-CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.o: CMakeFiles/edge-core.dir/flags.make
-CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.o: generated/edge_service.pb.cc
-CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_15) "Building CXX object CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.o -MF CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.o.d -o CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/generated/edge_service.pb.cc
-
-CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/generated/edge_service.pb.cc > CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.i
-
-CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/generated/edge_service.pb.cc -o CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.s
-
-CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.o: CMakeFiles/edge-core.dir/flags.make
-CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.o: generated/edge_service.grpc.pb.cc
-CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.o: CMakeFiles/edge-core.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_16) "Building CXX object CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.o -MF CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.o.d -o CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.o -c /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/generated/edge_service.grpc.pb.cc
-
-CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/generated/edge_service.grpc.pb.cc > CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.i
-
-CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/generated/edge_service.grpc.pb.cc -o CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.s
-
 # Object files for target edge-core
 edge__core_OBJECTS = \
 "CMakeFiles/edge-core.dir/src/main.cpp.o" \
@@ -300,16 +258,14 @@ edge__core_OBJECTS = \
 "CMakeFiles/edge-core.dir/src/device_manager.cpp.o" \
 "CMakeFiles/edge-core.dir/src/discovery_service.cpp.o" \
 "CMakeFiles/edge-core.dir/src/edge_runtime.cpp.o" \
-"CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.o" \
 "CMakeFiles/edge-core.dir/src/energy_ai.cpp.o" \
 "CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o" \
+"CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.o" \
 "CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.o" \
 "CMakeFiles/edge-core.dir/src/canbus_interface.cpp.o" \
 "CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.o" \
 "CMakeFiles/edge-core.dir/src/writeback_controller.cpp.o" \
-"CMakeFiles/edge-core.dir/src/hvac_control.cpp.o" \
-"CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.o" \
-"CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.o"
+"CMakeFiles/edge-core.dir/src/hvac_control.cpp.o"
 
 # External object files for target edge-core
 edge__core_EXTERNAL_OBJECTS =
@@ -319,20 +275,17 @@ edge-core: CMakeFiles/edge-core.dir/src/bacnet_client.cpp.o
 edge-core: CMakeFiles/edge-core.dir/src/device_manager.cpp.o
 edge-core: CMakeFiles/edge-core.dir/src/discovery_service.cpp.o
 edge-core: CMakeFiles/edge-core.dir/src/edge_runtime.cpp.o
-edge-core: CMakeFiles/edge-core.dir/src/edge_grpc_server.cpp.o
 edge-core: CMakeFiles/edge-core.dir/src/energy_ai.cpp.o
 edge-core: CMakeFiles/edge-core.dir/src/bacnet_interface.cpp.o
+edge-core: CMakeFiles/edge-core.dir/src/bacnet_object_database.cpp.o
 edge-core: CMakeFiles/edge-core.dir/src/modbus_rtu_interface.cpp.o
 edge-core: CMakeFiles/edge-core.dir/src/canbus_interface.cpp.o
 edge-core: CMakeFiles/edge-core.dir/src/fieldbus_gateway.cpp.o
 edge-core: CMakeFiles/edge-core.dir/src/writeback_controller.cpp.o
 edge-core: CMakeFiles/edge-core.dir/src/hvac_control.cpp.o
-edge-core: CMakeFiles/edge-core.dir/generated/edge_service.pb.cc.o
-edge-core: CMakeFiles/edge-core.dir/generated/edge_service.grpc.pb.cc.o
 edge-core: CMakeFiles/edge-core.dir/build.make
-edge-core: /usr/lib/x86_64-linux-gnu/libprotobuf.so
 edge-core: CMakeFiles/edge-core.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_17) "Linking CXX executable edge-core"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_14) "Linking CXX executable edge-core"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/edge-core.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -343,10 +296,7 @@ CMakeFiles/edge-core.dir/clean:
 	$(CMAKE_COMMAND) -P CMakeFiles/edge-core.dir/cmake_clean.cmake
 .PHONY : CMakeFiles/edge-core.dir/clean
 
-CMakeFiles/edge-core.dir/depend: generated/edge_service.grpc.pb.cc
-CMakeFiles/edge-core.dir/depend: generated/edge_service.grpc.pb.h
-CMakeFiles/edge-core.dir/depend: generated/edge_service.pb.cc
-CMakeFiles/edge-core.dir/depend: generated/edge_service.pb.h
+CMakeFiles/edge-core.dir/depend:
 	cd /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/CMakeFiles/edge-core.dir/DependInfo.cmake "--color=$(COLOR)"
 .PHONY : CMakeFiles/edge-core.dir/depend
 

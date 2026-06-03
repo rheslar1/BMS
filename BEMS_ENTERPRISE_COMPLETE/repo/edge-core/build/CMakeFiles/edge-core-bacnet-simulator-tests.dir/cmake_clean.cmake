@@ -1,6 +1,8 @@
 file(REMOVE_RECURSE
   "CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_interface.cpp.o"
   "CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_interface.cpp.o.d"
+  "CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_object_database.cpp.o"
+  "CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_object_database.cpp.o.d"
   "CMakeFiles/edge-core-bacnet-simulator-tests.dir/tests/bacnet_simulator_test.cpp.o"
   "CMakeFiles/edge-core-bacnet-simulator-tests.dir/tests/bacnet_simulator_test.cpp.o.d"
   "edge-core-bacnet-simulator-tests"

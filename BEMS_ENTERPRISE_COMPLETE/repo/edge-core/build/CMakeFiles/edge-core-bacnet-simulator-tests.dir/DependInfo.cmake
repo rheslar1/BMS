@@ -9,6 +9,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/bacnet_interface.cpp" "CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_interface.cpp.o" "gcc" "CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_interface.cpp.o.d"
+  "/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src/bacnet_object_database.cpp" "CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_object_database.cpp.o" "gcc" "CMakeFiles/edge-core-bacnet-simulator-tests.dir/src/bacnet_object_database.cpp.o.d"
   "/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/tests/bacnet_simulator_test.cpp" "CMakeFiles/edge-core-bacnet-simulator-tests.dir/tests/bacnet_simulator_test.cpp.o" "gcc" "CMakeFiles/edge-core-bacnet-simulator-tests.dir/tests/bacnet_simulator_test.cpp.o.d"
   )
 

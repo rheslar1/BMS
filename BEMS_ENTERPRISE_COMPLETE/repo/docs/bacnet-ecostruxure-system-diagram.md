@@ -1,6 +1,6 @@
 # BACnet + Enterprise BMS System Diagram
 
-This diagram shows how the platform maps to a WebStation/EcoStruxure-style BMS architecture while keeping this project's actual implementation boundaries: React UI, Node.js API, MySQL, Python AI service, C++ edge core, gRPC, SSE, and BACnet/IP.
+This diagram shows how the platform maps to a WebStation/EcoStruxure-style BMS architecture while keeping this project's actual implementation boundaries: React UI, Node.js API, MySQL, Python AI service, C++ edge core, RabbitMQ edge commands, SSE, and BACnet/IP.
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -33,17 +33,17 @@ This diagram shows how the platform maps to a WebStation/EcoStruxure-style BMS a
 │ - Trends/analytics/RL      │       └─────────────────────────────────────────┘
 └────────────────────────────┘
                 ▲
-                │ gRPC
+                │ RabbitMQ AMQP edge commands/events
                 ▼
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                              C++ Edge Core                                   │
 │                                                                              │
-│  EdgeCoreService                                                             │
-│  - DiscoverDevices                                                           │
-│  - ReadPoint                                                                 │
-│  - WritePoint                                                                │
-│  - SubscribeCov                                                              │
-│  - EnergyForecast                                                            │
+│  RabbitMQ command boundary                                                   │
+│  - bacnet.discover_devices                                                   │
+│  - bacnet.read_property / bacnet.read_property_multiple                      │
+│  - bacnet.write_property                                                     │
+│  - bacnet.subscribe_cov                                                      │
+│  - edge.energy_forecast                                                      │
 │                                                                              │
 │  BACnet/IP client                                                            │
 │  - Who-Is / I-Am                                                             │

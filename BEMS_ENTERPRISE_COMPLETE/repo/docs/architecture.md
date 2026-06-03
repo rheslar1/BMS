@@ -9,7 +9,7 @@
 | Deployment Target | Ubuntu 22.04 containers and Digi ConnectCore i.MX93-class embedded Linux |
 | Live Update Transport | Server-Sent Events only; WebSockets are not used |
 | Runtime Style | Event-driven architecture with HTTP commands, domain events, Kafka/RabbitMQ/MQTT event publication, and SSE browser projections |
-| Edge Protocols | RabbitMQ AMQP command queue from Node.js to edge/nRF52840 field-device workers, optional gRPC EdgeCoreService fallback, BACnet/IP and BACnet MS/TP/EIA-485 to field devices |
+| Edge Protocols | RabbitMQ AMQP command queue from Node.js to edge/nRF52840 field-device workers, BACnet/IP and BACnet MS/TP/EIA-485 to field devices |
 | Field Readiness Goal | Real buildings, BACnet devices, dashboards, storage, alarms, analytics, HVAC, lighting, power monitoring, energy optimization, and embedded deployment |
 
 # IntelliBuild Energy Architecture
@@ -50,7 +50,7 @@ repo/
   edge-core/         C++ BACnet/control/energy core
   field-device/      C++ bare-metal BACnet field-device firmware target and simulator harness
   node-api/          Node.js Web API, SaaS admin, SSE telemetry/alarm streams, watchdog, remote API
-  proto/             gRPC contracts for AI service and edge core
+  proto/             gRPC contract for the AI service
   ui/                React dashboard
   yocto/             i.MX93 Yocto integration layer
   .github/           CI workflow
@@ -77,7 +77,7 @@ Additional design notes:
 │                         Node.js Web API                              │
 │  Auth/RBAC, tenant context, REST API, SSE streams, orchestration      │
 └───────┬───────────────────┬───────────────────────────────┬─────────┘
-        │ SQL               │ gRPC                           │ RabbitMQ AMQP commands
+        │ SQL               │ gRPC                           │ RabbitMQ AMQP edge commands
         ▼                   ▼                                ▼
 ┌───────────────┐   ┌──────────────────┐             ┌────────────────┐
 │ MySQL 8       │   │ Python AI Service│             │ C++ Edge Core  │
@@ -204,29 +204,30 @@ The BACnet implementation target is ANSI/ASHRAE Standard 135-2020. The project s
 The architecture includes a BACnet Energy Services Interface implementation through B/WS-style endpoints. This allows an energy data client to access complex structured building information over web services even when the underlying building control network is not BACnet. IntelliBuild Energy normalizes BACnet/IP, Modbus RTU, CAN, simulator, trend-log, analytics, pricing, grid, and demand-response data into structured energy signal payloads.
 
 ```text
-Node API                  EdgeCoreService            BACnet/IP Network           Field Device
+Node API                  RabbitMQ Edge Queue        C++ Edge Core / BACnet      Field Device
   |                            |                            |                         |
-  | DiscoverDevices gRPC       |                            |                         |
+  | bacnet.discover_devices    |                            |                         |
   |--------------------------->|                            |                         |
-  |                            | Who-Is, low/high instance  |                         |
-  |                            |--------------------------->|------------------------>|
+  |                            | command event              |                         |
+  |                            |--------------------------->| Who-Is, low/high inst. |
+  |                            |                            |------------------------>|
   |                            |                            | I-Am                    |
-  |                            |<---------------------------|<------------------------|
-  | devices[]                  |                            |                         |
-  |<---------------------------|                            |                         |
+  |                            | telemetry/provision event  |<------------------------|
+  |<---------------------------|<---------------------------|                         |
   |                            |                            |                         |
-  | ReadPoint gRPC             |                            |                         |
-  |--------------------------->| ReadProperty present-value |                         |
-  |                            |--------------------------->|------------------------>|
+  | bacnet.read_property       |                            |                         |
+  |--------------------------->| command event              |                         |
+  |                            |--------------------------->| ReadProperty present-value
+  |                            |                            |------------------------>|
   |                            | ComplexACK value           |                         |
-  | value/status               |<---------------------------|<------------------------|
-  |<---------------------------|                            |                         |
+  |<---------------------------| telemetry event            |<------------------------|
   |                            |                            |                         |
-  | SubscribeCov gRPC          |                            |                         |
-  |--------------------------->| SubscribeCOV               |                         |
-  |                            |--------------------------->|------------------------>|
+  | bacnet.subscribe_cov       |                            |                         |
+  |--------------------------->| command event              |                         |
+  |                            |--------------------------->| SubscribeCOV            |
+  |                            |                            |------------------------>|
   | subscribed                 | SimpleACK                  |                         |
-  |<---------------------------|<---------------------------|<------------------------|
+  |<---------------------------| telemetry event            |<------------------------|
 ```
 
 ## Architecture Layers
@@ -339,25 +340,25 @@ The Node.js API calls this AI service over gRPC when `AI_GRPC_ENDPOINT` is confi
 
 ### Service Contract Layer
 
-Defined in `proto/edge_service.proto` and `proto/ai_service.proto`.
+Defined in `proto/ai_service.proto` for AI optimization and RabbitMQ routing keys for edge orchestration.
 
 The Node.js service clients and command transports are:
 
 - RabbitMQ AMQP `bems.edge.commands` for edge/nRF52840 command delivery when `EDGE_COMMAND_TRANSPORT=rabbitmq`
-- `node-api/edgeClient.js` for optional synchronous C++ edge-core gRPC reads and fallback commands
+- `node-api/edgeClient.js` for RabbitMQ C++ edge-core command queuing and event-driven read/write/COV requests
 - `node-api/aiClient.js` for the Python AI gRPC contract
 
-Current edge-core RPC contract:
+Current edge RabbitMQ command contract:
 
-- `Health`
-- `ListDevices`
-- `DiscoverDevices`
-- `ReadPoint`
-- `WritePoint`
-- `SubscribeCov`
-- `GetEnergyForecast`
+- `bacnet.discover_devices`
+- `bacnet.read_property`
+- `bacnet.read_property_multiple`
+- `bacnet.write_property`
+- `bacnet.subscribe_cov`
+- `edge.energy_forecast`
+- `nrf52840.ota_update`
 
-The Docker deployment sets `EDGE_COMMAND_TRANSPORT=rabbitmq`, so Node.js queues edge and nRF52840 commands through RabbitMQ by default. `EDGE_GRPC_ENDPOINT=edge-core:50051` remains available for synchronous edge health, BACnet discovery, point reads, and energy forecasts. Without gRPC, command delivery still works through RabbitMQ while `edgeClient.js` uses local fallback responses for synchronous reads.
+The Docker deployment sets `EDGE_COMMAND_TRANSPORT=rabbitmq`, so Node.js queues edge and nRF52840 commands through RabbitMQ. Synchronous HTTP responses return queued status plus local fallback projections when needed; authoritative point updates arrive through telemetry, provisioning, and COV events.
 
 Current AI-service RPC contract:
 
@@ -371,7 +372,6 @@ Implemented in `edge-core/src`.
 
 - C++ edge runtime
 - RabbitMQ command-consumer boundary for queued edge/nRF52840 commands
-- Optional gRPC server for `bems.edge.v1.EdgeCoreService`
 - BACnet/IP UDP networking boundary
 - BACnet Who-Is / I-Am discovery path
 - Confirmed ReadProperty path
@@ -381,7 +381,7 @@ Implemented in `edge-core/src`.
 - Device refresh logic
 - Energy forecast logic
 - Safe writeback strategy with clamping and rollback behavior
-- Runtime facade exposed through the RabbitMQ command boundary and optional gRPC server adapter
+- Runtime facade exposed through the RabbitMQ command boundary
 
 ### Field Layer
 
@@ -538,7 +538,7 @@ Node.js routes discovery requests through `edgeClient.js`:
 - `POST /api/provisioning/discover`
 - `POST /api/edge/subscribe-cov`
 
-When `EDGE_GRPC_ENDPOINT` is not configured, discovery returns a local fallback response and explains that edge gRPC must be enabled for live BACnet discovery.
+Discovery requests are queued through RabbitMQ. Discovered devices and point updates return through provisioning, telemetry, and COV event projections.
 
 Implemented BACnet extension surfaces:
 
@@ -792,7 +792,7 @@ Services:
 - `api`: Ubuntu 22.04 Node.js backend, port `3000`
 - `ui`: Ubuntu 22.04 Apache web server serving the production React dashboard, host port `5173` to container port `80`
 - `ai-service`: Ubuntu 22.04 Python optimizer, HTTP port `8000`, gRPC port `50052`
-- `edge-core`: Ubuntu 22.04 C++ BACnet runtime, gRPC port `50051`, BACnet/IP UDP port `47808`
+- `edge-core`: Ubuntu 22.04 C++ BACnet runtime, BACnet/IP UDP port `47808`, RabbitMQ edge command consumer boundary
 - `db`: MySQL 8 database
 
 Health checks:
@@ -811,7 +811,7 @@ Useful local URLs:
 - Telemetry SSE stream: `http://localhost:3000/api/telemetry/stream`
 - Python AI health: `http://localhost:8000/health`
 - Python AI gRPC: `localhost:50052`
-- C++ edge gRPC: `localhost:50051`
+- RabbitMQ management: `http://localhost:15672` when exposed by deployment profile
 
 ## Edge and Yocto Deployment
 
@@ -905,14 +905,14 @@ EcoStruxure-style feature mapping:
 | Automation rules | Script / Function Block | Autonomous mode, AI control loop, deterministic decision engine, and ML/rule expansion path |
 | Bulk operations | Multi-edit / bindings | Device provisioning, commissioning, schedule inheritance, maintenance mode scoping, and API-driven updates |
 | Analytics dashboard | Enterprise analytics | Energy KPIs, optimization history, RL policy state, FDD findings, weather/pricing context, and reports |
-| Remote API | Enterprise integration API | HTTP/JSON API, session auth, RBAC, audit events, gRPC edge/AI service contracts |
+| Remote API | Enterprise integration API | HTTP/JSON API, session auth, RBAC, audit events, RabbitMQ edge commands, and AI gRPC service contract |
 
 Implemented alignment:
 
 - Real-building deployment path through Docker services and i.MX93 Yocto packaging
 - BACnet/IP discovery and communication path
 - BACnet device connection path through C++ UDP/BVLC Who-Is, ReadProperty, and WriteProperty
-- Node-to-edge integration over RabbitMQ AMQP commands, with optional gRPC through `EdgeCoreService` for synchronous reads/discovery
+- Node-to-edge integration over RabbitMQ AMQP commands for discovery, reads, writes, COV subscriptions, and OTA orchestration
 - Node-to-AI integration over gRPC through `AiOptimizationService`
 - Device provisioning and commissioning
 - Alarms and live alarm updates

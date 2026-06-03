@@ -6,12 +6,12 @@ AI-driven Building Management and Energy Management System for edge deployment.
 
 This repository matches the architecture in `docs/architecture.md`:
 
-- C++ edge core for BACnet/IP discovery, Modbus RTU/CAN bus adapters, point read/write, control, forecasting, safe writeback, and `EdgeCoreService` gRPC
+- C++ edge core for BACnet/IP discovery, BACnet server/device object database, Modbus RTU/CAN bus adapters, point read/write, control, forecasting, and safe writeback
 - Node.js Web API for HTTP/JSON commands, SSE telemetry/alarm streams, authentication, RBAC, SaaS admin, watchdog, FDD, maintenance tickets, AI control, provisioning, and remote management
 - Python AI service for whole-building multi-zone optimization and reinforcement-learning support over gRPC
 - React/Tailwind operator dashboard with professional light/dark mode, login, admin, user maintenance, charts, alarms, schedules, floorplan editor, digital twin, device provisioning, device details, live telemetry feed, and autonomous mode controls
 - MySQL persistence for building hierarchy, devices, schedules, alarms, analytics, users, roles, sessions, audit events, RL Q-values, optimization history, FDD findings, and maintenance tickets
-- Docker Compose deployment on Ubuntu containers, including the C++ edge-core gRPC service
+- Docker Compose deployment on Ubuntu containers, including the RabbitMQ-orchestrated C++ edge-core service
 - Kafka backend event streaming for telemetry, alarms, analytics, AI control, and building footprint events
 - Prometheus, Grafana, Alertmanager, Watchtower, and optional ELK logging for production operations
 - CI/CD workflow and scripts for canary deployment, blue/green promotion, rollback, multi-region deployment hooks, and MySQL backup/restore
@@ -29,9 +29,9 @@ ai-service/        Python AI optimizer with HTTP health/fallback and gRPC optimi
 database/          Canonical MySQL schema
 docker/            Docker Compose deployment and DB init schema
 docs/              Architecture, SDD, SDP, UML, and API surface docs
-edge-core/         C++ BACnet/control/energy runtime with gRPC server
-node-api/          Node.js Web API, auth, gRPC clients, migrations
-proto/             gRPC contracts for AI service and edge core
+edge-core/         C++ BACnet/control/energy runtime with RabbitMQ edge orchestration
+node-api/          Node.js Web API, auth, RabbitMQ edge client, AI gRPC client, migrations
+proto/             gRPC contract for the AI service
 scripts/           Local install and architecture verification helpers
 ui/                React dashboard
 yocto/             i.MX93 Yocto integration layer
@@ -53,7 +53,7 @@ Then open:
 - API health: `http://localhost:3000/api/health`
 - Watchdog: `http://localhost:3000/api/watchdog`
 - OpenAPI JSON: `http://localhost:3000/api/v1/openapi.json`
-- Edge gRPC: `localhost:50051`
+- BACnet/IP: UDP `47808`
 
 ## Demo Website
 
@@ -139,4 +139,4 @@ npm --prefix ui run build
 
 ## Environment
 
-Use `.env.example` as the deployment reference for Docker, API, AI service, edge gRPC, auth, and BACnet binding settings.
+Use `.env.example` as the deployment reference for Docker, API, AI service, RabbitMQ edge orchestration, auth, and BACnet binding settings.
