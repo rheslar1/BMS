@@ -62,6 +62,10 @@ Additional design notes:
 - `docs/bacnet-135-2020-conformance.md`: BACnet Standard 135-2020 conformance profile, supported services, object scope, and certification checklist
 - `docs/bems-backend-design.md`: backend design guide for the Node.js, MySQL, AI, edge, and BACnet service boundaries
 - `docs/device-architecture.md`: field-device firmware architecture, normalized object model, device persistent storage, EEPROM setpoint storage, nRF52840 BACnet devices, and 5-in-1 power meter profiles
+- `docs/architecture-implementation-diff.md`: implementation traceability and architecture delta record
+- `docs/physical-hardware-validation.md`: physical target validation checklist and sign-off template
+- `docs/commissioning-protocol-hardening.md`: richer commissioning tools, broader protocol coverage, and long-run field hardening
+- `docs/commercial-readiness-field-deployment.md`: field deployment, vendor gateway testing, cybersecurity review, and operator/engineering workflow readiness
 - `docs/database-schema.md`: real BMS/BEMS schema design for hierarchy, BACnet objects, scheduling, alarms, trends, analytics, security, and maintenance
 
 ## Runtime Architecture
@@ -141,6 +145,7 @@ Open protocol integration:
 - Modbus RTU integration through protocol adapters for meters, VFD drives, breakers, and legacy systems
 - Field-selectable power meters with BACnet/IP, BACnet/IPv6, Modbus TCP, Modbus RTU over EIA-485, REST API, Ethernet, one configurable pulse output, and two configurable pulse inputs
 - CAN integration path for equipment buses and embedded controller networks through gateway/adapters
+- Broader protocol adapter coverage for KNX/IP, DALI-2, LonWorks, OPC UA, SNMP, REST API, and MQTT over TLS smoke-test contracts
 - BACnet/IP as the main controller-to-server network for supervisory communication
 - nRF52840 BACnet field devices for temperature, humidity, CO2, occupancy, lighting, and room IO over wireless or wired transport
 - nRF52840 devices expose BACnet objects directly through wireless bridges or wired BACnet MS/TP/EIA-485 adapters for visualization, alarms, trends, schedules, and AI
@@ -356,6 +361,7 @@ Current edge RabbitMQ command contract:
 - `bacnet.write_property`
 - `bacnet.subscribe_cov`
 - `edge.energy_forecast`
+- `swupdate.install`
 - `nrf52840.ota_update`
 
 The Docker deployment sets `EDGE_COMMAND_TRANSPORT=rabbitmq`, so Node.js queues edge and nRF52840 commands through RabbitMQ. Synchronous HTTP responses return queued status plus local fallback projections when needed; authoritative point updates arrive through telemetry, provisioning, and COV events.
@@ -425,10 +431,15 @@ Device architecture traceability:
 | nRF52840 BACnet devices, wired or wireless | `nrf52840_bacnet_devices` capability, nRF52840 seed devices, and migrations `014`, `018`, and `020` store chipset, wired/wireless transport, BACnet identity, firmware, and battery percentage |
 | Normalized BACnet object model | API/device schema stores device instance, object type, object instance, present value, units, status, and JSON configuration; UI device details show the same object identity |
 | Persistent setpoints and schedules on device | `persistentStorage`, `setpointStorage`, and `bacnetScheduleStorage` are stored in device configuration; schedule create/update/enable/disable/delete syncs device-resident schedule metadata |
-| OTA update for field devices | `POST /api/devices/:deviceId/ota-update` records signed firmware metadata, checksum/signature, A/B boot partition state, staged inactive slot, watchdog confirmation requirement, rollback policy, and schedule/setpoint retention |
+| OTA update for field devices | `POST /api/firmware/artifacts` creates signed SWUpdate `.swu` metadata and `sw-description`; `POST /api/devices/:deviceId/ota-update` records checksum/signature, A/B boot partition state, staged inactive slot, watchdog confirmation requirement, rollback policy, schedule/setpoint retention, and optional system package update metadata, then queues `swupdate.install` through RabbitMQ |
 | Battery percentage reporting | `batteryPercent` is seeded, migrated, exposed in energy-service metadata, and editable in provisioning/device configuration UI |
 | Field-selectable power meters | 5-in-1 power meter seed/migration stores BACnet/IP, BACnet/IPv6, Modbus TCP, Modbus RTU over EIA-485, REST API, Ethernet, pulse output, and pulse inputs |
 | Event-driven platform flow | Domain events publish through Kafka/RabbitMQ/MQTT while browser projections remain SSE; edge/nRF52840 commands queue through RabbitMQ |
+| Richer commissioning tools | `GET /api/commissioning/readiness`, per-device checklists, acceptance evidence, protocol smoke-test evidence, trend/alarm verification, and audit records |
+| Broader protocol coverage | `GET /api/protocols/catalog` and `POST /api/protocols/smoke-test` cover BACnet, Modbus, CAN, KNX/IP, DALI-2, LonWorks, OPC UA, SNMP, REST, and MQTT adapter contracts |
+| Long-run field hardening | `GET /api/field-hardening/profile`, `POST /api/field-hardening/soak-test`, watchdog/metrics evidence, OTA rollback drills, and production harness actions |
+| Physical hardware validation | `docs/physical-hardware-validation.md` and `scripts/production_board_flash_update_test.sh` define board inventory, serial adapter smoke, SWUpdate, BACnet, nRF52840, and sign-off evidence |
+| Commercial readiness | `GET /api/commercial-readiness/catalog`, `POST /api/commercial-readiness/review`, field deployment evidence, vendor gateway testing, cybersecurity review, operator workflow, and engineering workflow sign-off |
 
 The field-device C++ design mirrors the edge-core C++ style: narrow interfaces, strategy/facade/adapter/repository patterns, dependency inversion, and simulator-friendly boundaries for unit tests and hardware substitution.
 
@@ -665,12 +676,13 @@ Implemented major API groups:
 - Device configuration: `PATCH /api/devices/:deviceId/configuration`
 - Setpoint and range: `PATCH /api/devices/:deviceId/setpoint`, `PATCH /api/devices/:deviceId/range`
 - Commissioning: `PATCH /api/devices/:deviceId/provision`, `PATCH /api/devices/:deviceId/commission`
+- Commissioning tools: `GET /api/commissioning/readiness`, `GET /api/commissioning/devices/:deviceId/checklist`, `POST /api/commissioning/devices/:deviceId/acceptance`
 - Hierarchy: `GET /api/hierarchy`
 - Digital twin: `GET /api/digital-twin`
 - Telemetry: `GET /api/telemetry/stream`
 - Trend logging: `GET /api/trends`, `POST /api/trends/snapshot`
 - Reporting: `GET /api/reports/summary`, `GET /api/reports/heat-map`, `GET /api/reports/export`, `GET /api/reports/exports`, `GET /api/reports/schedule-runs`, `GET /api/reports/trends.csv`, `GET /api/reports/energy.pdf`, `GET/POST/PATCH /api/reports/schedules`, `POST /api/reports/schedules/run-due`, `POST /api/reports/schedules/:scheduleId/run`
-- Firmware OTA: `GET/POST /api/firmware/artifacts`, `GET /api/firmware/ota-jobs`, `POST /api/devices/:deviceId/ota-update`
+- Firmware OTA: `GET/POST /api/firmware/artifacts`, `GET /api/firmware/artifacts/:artifactId/sw-description`, `GET /api/firmware/ota-jobs`, `POST /api/devices/:deviceId/ota-update`
 - Alarms: `GET /api/alarms`, `GET /api/alarm-logs`, `POST /api/alarms`, `PATCH /api/alarms/:alarmId/ack`, `PATCH /api/alarms/:alarmId/clear`
 - Alarm stream: `GET /api/alarms/stream`
 - Schedules: `GET /api/schedules`, `GET /api/schedules/effective`, `POST /api/schedules`, `PATCH /api/schedules/:scheduleId`, enable, disable, delete
@@ -696,6 +708,9 @@ Implemented major API groups:
 - Energy Services Interface: `GET /api/energy-services/esi`, `GET /api/energy-services/signals`, `GET /api/energy-services/bws`
 - BACnet COV: `POST /api/edge/subscribe-cov`, `POST /api/edge/cov-notifications`
 - Edge platform capabilities: `GET /api/edge/capabilities`
+- Protocol catalog and smoke tests: `GET /api/protocols/catalog`, `POST /api/protocols/smoke-test`
+- Field hardening: `GET /api/field-hardening/profile`, `POST /api/field-hardening/soak-test`
+- Commercial readiness: `GET /api/commercial-readiness/catalog`, `POST /api/commercial-readiness/review`
 - Modbus RTU: `POST /api/modbus/rtu/read`, `POST /api/modbus/rtu/write`
 - CAN bus: `POST /api/canbus/send`
 - Provisioning: `POST /api/provisioning/discover`, `GET /api/provisioning/status`
@@ -781,7 +796,7 @@ Device records include:
 
 Setpoint-capable devices can persist their last approved setpoint in EEPROM-style device configuration. Device-scoped schedules are persistent on the BACnet device itself as Schedule objects; the server keeps the audit/configuration copy and mirrors the runnable schedule into `bacnetScheduleStorage` for BACnet WriteProperty synchronization. Controller-class devices can also persist identity, commissioning state, calibration, counters, pulse totals, and range limits in EEPROM, Flash NVS, FRAM, or filesystem-backed storage. The UI exposes storage medium, namespace, EEPROM address, storage size, write policy, wear leveling, retained setpoint storage, and device-resident BACnet schedule storage during provisioning and device configuration. The API stores this metadata in the device `configuration` JSON as `persistentStorage`, `eepromEnabled`, `eepromAddress`, `eepromSizeBytes`, `eepromWritePolicy`, `setpointStorage`, and `bacnetScheduleStorage`.
 
-BACnet bare-metal field devices support OTA update orchestration. `POST /api/firmware/artifacts` creates signed firmware manifests with version, channel, artifact URI, checksum, signature, signing key id, A/B partition scheme, boot slots, and manifest metadata. The server signs with RSA-SHA256 when `OTA_PRIVATE_KEY_PEM` is configured and otherwise uses the development HMAC signer. `POST /api/devices/:deviceId/ota-update` records an OTA job, stores the signed manifest in device configuration, publishes the event-driven update command, and expects the field-device bootloader flow to validate the image, stage it in the inactive A/B slot, swap into `pending-confirmation`, watchdog-confirm the new slot, roll back to the previous confirmed slot on failure, and preserve persistent setpoints and BACnet Schedule objects.
+BACnet bare-metal field devices support OTA update orchestration through SWUpdate. `POST /api/firmware/artifacts` creates signed SWUpdate `.swu` artifact metadata with version, channel, artifact URI, checksum, signature, signing key id, A/B partition scheme, boot slots, software set/mode, install command, optional system package update list, and generated `sw-description`; `GET /api/firmware/artifacts/:artifactId/sw-description` serves the descriptor for package assembly and audit. The server signs with RSA-SHA256 when `OTA_PRIVATE_KEY_PEM` is configured and otherwise uses the development HMAC signer. `POST /api/devices/:deviceId/ota-update` records an OTA job, stores the signed SWUpdate manifest in device configuration, publishes the event-driven update command, and queues `swupdate.install` through RabbitMQ so the edge client runs `swupdate -i <image>.swu -e <software-set>,<mode>`. If `systemPackageUpdate.enabled` is true, the edge client applies the explicit package list with the configured package manager (`auto`, `opkg`, `dnf`, or `apt`) after the signed image step. The bootloader flow validates the signed image, stages it in the inactive A/B slot, swaps into `pending-confirmation`, watchdog-confirms the new slot, rolls back to the previous confirmed slot on failure, and preserves persistent setpoints and BACnet Schedule objects.
 
 ## Deployment Architecture
 
@@ -792,7 +807,7 @@ Services:
 - `api`: Ubuntu 22.04 Node.js backend, port `3000`
 - `ui`: Ubuntu 22.04 Apache web server serving the production React dashboard, host port `5173` to container port `80`
 - `ai-service`: Ubuntu 22.04 Python optimizer, HTTP port `8000`, gRPC port `50052`
-- `edge-core`: Ubuntu 22.04 C++ BACnet runtime, BACnet/IP UDP port `47808`, RabbitMQ edge command consumer boundary
+- `edge-core`: Ubuntu 22.04 C++ BACnet runtime, BACnet/IP UDP port `47808`, RabbitMQ edge command consumer boundary, and SWUpdate client wrapper for signed `.swu` installs
 - `db`: MySQL 8 database
 
 Health checks:
@@ -822,6 +837,8 @@ Implemented artifacts:
 - `recipes-bems/edge-core/edge-core.bb`
 - `recipes-bems/node-api/node-api.bb`
 - `edge-core/packaging/bems-edge-core.service`
+- `scripts/production_board_flash_update_test.sh`
+- `docs/production-board-flashing-and-update-cycle-testing.md`
 
 The edge core can bind a specific BACnet interface with:
 
@@ -830,6 +847,8 @@ BACNET_LOCAL_IP=<interface-ip>
 ```
 
 Without `BACNET_LOCAL_IP`, the edge core binds `0.0.0.0`.
+
+Production physical board flashing and update-cycle testing are covered by `docs/production-board-flashing-and-update-cycle-testing.md`. The guarded harness `scripts/production_board_flash_update_test.sh` supports local media flashing with `FLASH_CONFIRM=YES_FLASH_TARGET`, first-boot validation over SSH, signed SWUpdate `.swu` install, explicit system package update validation, RabbitMQ `swupdate.install` command validation, BACnet ReadPropertyMultiple/COV smoke checks, and nRF52840 BACnet metadata validation.
 
 For demos or test environments without field devices:
 

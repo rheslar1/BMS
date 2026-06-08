@@ -1,0 +1,5 @@
+{
+    "nrf5-vscode.seggerEmbeddedStudioPath": "/opt/SEGGER/segger_embedded_studio_8.28",
+    "cmake.sourceDirectory": "/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core",
+    "nrf5-vscode.jLinkPath": "/opt/SEGGER/JLink_V924a"
+}

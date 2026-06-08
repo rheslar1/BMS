@@ -1,17 +1,17 @@
-Start testing: Jun 01 16:38 EDT
+Start testing: Jun 03 13:04 EDT
 ----------------------------------------------------------
 1/7 Testing: edge-core-tests
 1/7 Test: edge-core-tests
 Command: "/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/edge-core-tests"
 Directory: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build
-"edge-core-tests" start time: Jun 01 16:38 EDT
+"edge-core-tests" start time: Jun 03 13:04 EDT
 Output:
 ----------------------------------------------------------
 <end of output>
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"edge-core-tests" end time: Jun 01 16:38 EDT
+"edge-core-tests" end time: Jun 03 13:04 EDT
 "edge-core-tests" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -19,7 +19,7 @@ Test Passed.
 2/7 Test: edge-core-bacnet-simulator-tests
 Command: "/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/edge-core-bacnet-simulator-tests"
 Directory: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build
-"edge-core-bacnet-simulator-tests" start time: Jun 01 16:38 EDT
+"edge-core-bacnet-simulator-tests" start time: Jun 03 13:04 EDT
 Output:
 ----------------------------------------------------------
 [BACnet] Simulator enabled with 7 simulated BACnet devices. Real BACnet UDP is bypassed.
@@ -27,7 +27,7 @@ Output:
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"edge-core-bacnet-simulator-tests" end time: Jun 01 16:38 EDT
+"edge-core-bacnet-simulator-tests" end time: Jun 03 13:04 EDT
 "edge-core-bacnet-simulator-tests" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -35,14 +35,14 @@ Test Passed.
 3/7 Test: edge-core-bacnet-object-database-tests
 Command: "/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/edge-core-bacnet-object-database-tests"
 Directory: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build
-"edge-core-bacnet-object-database-tests" start time: Jun 01 16:38 EDT
+"edge-core-bacnet-object-database-tests" start time: Jun 03 13:04 EDT
 Output:
 ----------------------------------------------------------
 <end of output>
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"edge-core-bacnet-object-database-tests" end time: Jun 01 16:38 EDT
+"edge-core-bacnet-object-database-tests" end time: Jun 03 13:04 EDT
 "edge-core-bacnet-object-database-tests" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -50,14 +50,14 @@ Test Passed.
 4/7 Test: edge-core-fieldbus-tests
 Command: "/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/edge-core-fieldbus-tests"
 Directory: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build
-"edge-core-fieldbus-tests" start time: Jun 01 16:38 EDT
+"edge-core-fieldbus-tests" start time: Jun 03 13:04 EDT
 Output:
 ----------------------------------------------------------
 <end of output>
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"edge-core-fieldbus-tests" end time: Jun 01 16:38 EDT
+"edge-core-fieldbus-tests" end time: Jun 03 13:04 EDT
 "edge-core-fieldbus-tests" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -65,14 +65,14 @@ Test Passed.
 5/7 Test: edge-core-energy-ai-tests
 Command: "/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/edge-core-energy-ai-tests"
 Directory: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build
-"edge-core-energy-ai-tests" start time: Jun 01 16:38 EDT
+"edge-core-energy-ai-tests" start time: Jun 03 13:04 EDT
 Output:
 ----------------------------------------------------------
 <end of output>
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"edge-core-energy-ai-tests" end time: Jun 01 16:38 EDT
+"edge-core-energy-ai-tests" end time: Jun 03 13:04 EDT
 "edge-core-energy-ai-tests" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -80,14 +80,14 @@ Test Passed.
 6/7 Test: edge-core-discovery-tests
 Command: "/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/edge-core-discovery-tests"
 Directory: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build
-"edge-core-discovery-tests" start time: Jun 01 16:38 EDT
+"edge-core-discovery-tests" start time: Jun 03 13:04 EDT
 Output:
 ----------------------------------------------------------
 <end of output>
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"edge-core-discovery-tests" end time: Jun 01 16:38 EDT
+"edge-core-discovery-tests" end time: Jun 03 13:04 EDT
 "edge-core-discovery-tests" time elapsed: 00:00:00
 ----------------------------------------------------------
 
@@ -95,15 +95,15 @@ Test Passed.
 7/7 Test: edge-core-hvac-control-tests
 Command: "/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/edge-core-hvac-control-tests"
 Directory: /home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build
-"edge-core-hvac-control-tests" start time: Jun 01 16:38 EDT
+"edge-core-hvac-control-tests" start time: Jun 03 13:04 EDT
 Output:
 ----------------------------------------------------------
 <end of output>
 Test time =   0.00 sec
 ----------------------------------------------------------
 Test Passed.
-"edge-core-hvac-control-tests" end time: Jun 01 16:38 EDT
+"edge-core-hvac-control-tests" end time: Jun 03 13:04 EDT
 "edge-core-hvac-control-tests" time elapsed: 00:00:00
 ----------------------------------------------------------
 
-End testing: Jun 01 16:38 EDT
+End testing: Jun 03 13:04 EDT

@@ -80,8 +80,28 @@ void testRollsBackWhenVerificationReadFails() {
     assert(near(client->writes_[1], 55.0));
 }
 
+void testReportsExpiredClient() {
+    std::unique_ptr<SafeWritebackController> controller;
+    {
+        auto client = std::make_shared<FakeBacnetClient>(55.0);
+        controller = std::make_unique<SafeWritebackController>(client);
+    }
+
+    const auto result = controller->write({
+        {102, 1, 1},
+        45.0,
+        35.0,
+        80.0,
+        WriteMode::Absolute,
+    });
+
+    assert(!result.accepted);
+    assert(result.message == "BACnet client is no longer available.");
+}
+
 int main() {
     testClampsAbsoluteWrite();
     testRollsBackWhenVerificationReadFails();
+    testReportsExpiredClient();
     return 0;
 }

@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "../.."
+		},
+		{
+			"name": "app_event_manager_profiler_tracer",
+			"path": "../../../../../ncs/v3.3.0/nrf/samples/app_event_manager_profiler_tracer"
+		}
+	],
+	"settings": {
+		"nrf5-vscode.seggerEmbeddedStudioPath": "/opt/SEGGER/segger_embedded_studio_8.28",
+		"nrf5-vscode.jLinkPath": "/opt/SEGGER/JLink_V924a",
+		"nrf-connect.applications": [
+			"/home/admin/ncs/v3.3.0/nrf/samples/app_event_manager_profiler_tracer"
+		]
+	}
+}

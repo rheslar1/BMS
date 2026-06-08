@@ -133,19 +133,21 @@ For device-scoped schedules, the BACnet device is the runnable source. The serve
 
 ## OTA Update
 
-BACnet bare-metal field devices support OTA firmware update orchestration. The BEMS queues the update intent, records the target version/channel/artifact URI, and the field device supervisor applies the image through a safe bootloader flow.
+BACnet bare-metal field devices support OTA firmware update orchestration. The BEMS queues the update intent, records the target version/channel/SWUpdate `.swu` artifact URI, and the field device supervisor applies the image through a safe bootloader flow.
 
 Required OTA behavior:
 
-- Signed firmware metadata with version, channel, artifact URI, checksum, signature, signing key id, and manifest algorithm.
+- Signed SWUpdate firmware metadata with version, channel, `.swu` artifact URI, checksum, signature, signing key id, manifest algorithm, software set/mode, and generated `sw-description`.
+- Edge-side SWUpdate client execution through `swupdate -i <image>.swu -e <software-set>,<mode>` with optional public-key verification.
+- Optional explicit system package updates through signed manifest fields `systemPackages` and `packageManager`; the edge client supports `auto`, `opkg`, `dnf`, and `apt` package manager selection.
 - A/B boot partitions with an active slot, inactive staging slot, boot-control block, watchdog-confirmed boot, and rollback to the previous confirmed slot.
 - BACnet-visible update status such as `queued`, `downloading`, `staged`, `applying`, `complete`, or `rollback`.
 - Persistent OTA state in EEPROM/Flash NVS so power loss during update resumes safely.
 - Local control and schedule execution remain active until the bootloader applies the staged image.
 - Device schedules and setpoints must survive the firmware update.
-- Server-side firmware artifacts are created through `POST /api/firmware/artifacts`; device jobs are queued through `POST /api/devices/:deviceId/ota-update`; job status is listed through `GET /api/firmware/ota-jobs`.
+- Server-side firmware artifacts are created through `POST /api/firmware/artifacts`; `sw-description` is served through `GET /api/firmware/artifacts/:artifactId/sw-description`; device jobs are queued through `POST /api/devices/:deviceId/ota-update`; job status is listed through `GET /api/firmware/ota-jobs`.
 
-The field-device implementation models this as slots `A` and `B`. OTA staging always writes to the inactive slot, `applyStagedImage()` swaps the active slot into `pending-confirmation`, `confirmBoot()` marks the new slot as confirmed, and `rollback()` restores the previous confirmed slot if watchdog confirmation does not arrive.
+The field-device implementation models this as slots `A` and `B`. OTA staging always writes to the inactive slot through SWUpdate, `applyStagedImage()` swaps the active slot into `pending-confirmation`, `confirmBoot()` marks the new slot as confirmed, and `rollback()` restores the previous confirmed slot if watchdog confirmation does not arrive.
 
 ## Device Classes
 

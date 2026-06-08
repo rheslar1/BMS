@@ -37,5 +37,5 @@ public:
     WritebackResult write(const WritebackRequest &request) override;
 
 private:
-    std::shared_ptr<IBacnetClient> bacnetClient_;
+    std::weak_ptr<IBacnetClient> bacnetClient_;
 };

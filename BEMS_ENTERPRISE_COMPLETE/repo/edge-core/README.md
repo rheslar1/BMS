@@ -55,6 +55,15 @@ cmake ..
 cmake --build .
 ```
 
+Useful CMake presets:
+
+- `default`: normal C++17 build.
+- `asan-ubsan`: AddressSanitizer and UndefinedBehaviorSanitizer debug build.
+- `tsan`: ThreadSanitizer debug build for threaded tests.
+- `static-analysis`: enables `clang-tidy` through CMake.
+
+Static-analysis exceptions are tracked in `cppcheck-suppressions.txt`. Add suppressions there rather than hiding them in CI commands.
+
 ## BACnet Integration
 
 `src/bacnet_interface.cpp` contains the BACnet/IP network boundary used by the edge core.
@@ -101,6 +110,25 @@ The edge core also includes modular fieldbus support for equipment commonly foun
 `IFieldbusGateway` is the runtime boundary. The current `SimulatorFieldbusGateway` validates and builds protocol frames for development and CI. Production serial or SocketCAN transports can implement the same interface without changing the rest of the edge core.
 
 Module tests are provided in `tests/fieldbus_interface_test.cpp` for Modbus CRC/frame encoding, simulated Modbus register reads, CAN frame validation, and the fieldbus gateway facade.
+
+## Runtime Container Notes
+
+- Discovery batches reserve one slot per requested BACnet instance in the requested range, then sort discovered devices by BACnet instance with `std::sort` before assigning runtime IDs.
+- Polling telemetry batches are capped at `EdgeRuntime::MaxTelemetryBatchSize` entries. The current cap is 256 refreshed device snapshots per polling pass.
+- Callback work passed to `EdgeRuntime::startPolling()` runs on the worker thread after each `pollOnce()` completes.
+- `DeviceManager::devices_` is a `std::vector`; references and iterators can be invalidated by future insert/erase/reallocation. Runtime polling avoids keeping iterators across mutation points and copies refreshed devices into the bounded telemetry batch before sorting/logging.
+- `deviceAddresses` in the BACnet bridge is a `std::map`; iterators remain stable across inserts but are invalidated for erased entries. Shutdown clears the map only after the socket is closed.
+
+## Service API Compatibility
+
+`src/edge_service.h` is the public service-module boundary. It uses the Pimpl pattern: callers see `EdgeService`, `EdgeServiceConfig`, and schema-bearing telemetry config records, while private runtime objects such as `EdgeRuntime`, `DeviceManager`, loggers, discovery services, and writeback controllers stay in `edge_service.cpp`.
+
+Compatibility expectations:
+
+- `EdgeServiceConfig::schemaVersion` and `TelemetryPointConfig::schemaVersion` start at `1`; new optional fields should preserve backward-compatible defaults.
+- Private implementation members may change without requiring consumers to rebuild against a different object layout.
+- Public constructor and method signatures should remain source-compatible within a major service schema version.
+- The shared library target is `edge-core-service-shared`, producing `libedge-core-service.so` on Linux.
 
 ## Edge Command Contract
 

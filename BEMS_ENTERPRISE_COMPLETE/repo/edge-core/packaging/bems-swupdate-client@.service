@@ -1,0 +1,10 @@
+[Unit]
+Description=BEMS SWUpdate install client for %I
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=SWUPDATE_SOFTWARE_SET=stable
+Environment=SWUPDATE_MODE=copy-2
+ExecStart=/usr/bin/bems-swupdate-client %I

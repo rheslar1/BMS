@@ -1,5 +1,6 @@
 #include "bacnet_interface.h"
 #include "bacnet_object_database.h"
+#include "unique_fd.h"
 
 #include <arpa/inet.h>
 #include <cerrno>
@@ -40,7 +41,7 @@ constexpr uint32_t OBJECT_TYPE_DEVICE = 8;
 constexpr uint32_t PROPERTY_PRESENT_VALUE = 85;
 
 struct BacnetContext {
-    int socketFd = -1;
+    UniqueFd socketFd;
     uint16_t port = 47808;
     uint8_t invokeId = 1;
     bool simulatorEnabled = false;
@@ -242,7 +243,7 @@ std::vector<uint8_t> withBvlc(uint8_t function, const std::vector<uint8_t> &npdu
 }
 
 bool sendPacket(const std::vector<uint8_t> &packet, const sockaddr_in &address) {
-    const auto sent = sendto(context.socketFd, packet.data(), packet.size(), 0,
+    const auto sent = sendto(context.socketFd.get(), packet.data(), packet.size(), 0,
                              reinterpret_cast<const sockaddr *>(&address), sizeof(address));
     return sent == static_cast<ssize_t>(packet.size());
 }
@@ -258,13 +259,13 @@ sockaddr_in broadcastAddress() {
 std::optional<std::pair<std::vector<uint8_t>, sockaddr_in>> receivePacket(int timeoutMs) {
     fd_set readSet;
     FD_ZERO(&readSet);
-    FD_SET(context.socketFd, &readSet);
+    FD_SET(context.socketFd.get(), &readSet);
 
     timeval timeout{};
     timeout.tv_sec = timeoutMs / 1000;
     timeout.tv_usec = (timeoutMs % 1000) * 1000;
 
-    const int ready = select(context.socketFd + 1, &readSet, nullptr, nullptr, &timeout);
+    const int ready = select(context.socketFd.get() + 1, &readSet, nullptr, nullptr, &timeout);
     if (ready <= 0) {
         return std::nullopt;
     }
@@ -272,7 +273,7 @@ std::optional<std::pair<std::vector<uint8_t>, sockaddr_in>> receivePacket(int ti
     std::vector<uint8_t> buffer(1500);
     sockaddr_in source{};
     socklen_t sourceLength = sizeof(source);
-    const auto received = recvfrom(context.socketFd, buffer.data(), buffer.size(), 0,
+    const auto received = recvfrom(context.socketFd.get(), buffer.data(), buffer.size(), 0,
                                    reinterpret_cast<sockaddr *>(&source), &sourceLength);
     if (received <= 0) {
         return std::nullopt;
@@ -590,15 +591,15 @@ std::optional<BacnetCovNotification> parseCovNotification(const std::vector<uint
 }
 
 bool initializeSocket(const char *localIpAddress, uint16_t localPort) {
-    context.socketFd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (context.socketFd < 0) {
+    UniqueFd socketFd(socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP));
+    if (!socketFd) {
         std::cerr << "[BACnet] Socket creation failed: " << std::strerror(errno) << std::endl;
         return false;
     }
 
     int enabled = 1;
-    setsockopt(context.socketFd, SOL_SOCKET, SO_REUSEADDR, &enabled, sizeof(enabled));
-    setsockopt(context.socketFd, SOL_SOCKET, SO_BROADCAST, &enabled, sizeof(enabled));
+    setsockopt(socketFd.get(), SOL_SOCKET, SO_REUSEADDR, &enabled, sizeof(enabled));
+    setsockopt(socketFd.get(), SOL_SOCKET, SO_BROADCAST, &enabled, sizeof(enabled));
 
     sockaddr_in local{};
     local.sin_family = AF_INET;
@@ -606,22 +607,19 @@ bool initializeSocket(const char *localIpAddress, uint16_t localPort) {
     if (localIpAddress && std::strlen(localIpAddress) > 0 && std::strcmp(localIpAddress, "0.0.0.0") != 0) {
         if (inet_pton(AF_INET, localIpAddress, &local.sin_addr) != 1) {
             std::cerr << "[BACnet] Invalid local IP address: " << localIpAddress << std::endl;
-            close(context.socketFd);
-            context.socketFd = -1;
             return false;
         }
     } else {
         local.sin_addr.s_addr = INADDR_ANY;
     }
 
-    if (bind(context.socketFd, reinterpret_cast<sockaddr *>(&local), sizeof(local)) != 0) {
+    if (bind(socketFd.get(), reinterpret_cast<sockaddr *>(&local), sizeof(local)) != 0) {
         std::cerr << "[BACnet] Bind failed for " << (localIpAddress ? localIpAddress : "0.0.0.0")
                   << ":" << localPort << ": " << std::strerror(errno) << std::endl;
-        close(context.socketFd);
-        context.socketFd = -1;
         return false;
     }
 
+    context.socketFd = std::move(socketFd);
     context.port = localPort;
     return true;
 }
@@ -630,7 +628,7 @@ bool initializeSocket(const char *localIpAddress, uint16_t localPort) {
 
 bool bacnet_initialize(const char *localDeviceId, const char *localIpAddress, uint16_t localPort) {
     std::lock_guard<std::mutex> lock(context.mutex);
-    if (context.socketFd >= 0 || context.simulatorEnabled) {
+    if (context.socketFd || context.simulatorEnabled) {
         return true;
     }
 
@@ -644,11 +642,21 @@ bool bacnet_initialize(const char *localDeviceId, const char *localIpAddress, ui
 
     std::cout << "[BACnet] Initializing BACnet/IP client: " << (localDeviceId ? localDeviceId : "EdgeCoreDevice")
               << " @ " << (localIpAddress ? localIpAddress : "0.0.0.0") << ":" << localPort << std::endl;
-    return initializeSocket(localIpAddress, localPort);
+    if (!initializeSocket(localIpAddress, localPort)) {
+        return false;
+    }
+
+    if (envEnabled("BEMS_FAIL_STARTUP_AFTER_SOCKET_OPEN")) {
+        std::cerr << "[BACnet] Simulated startup failure after socket open." << std::endl;
+        context.socketFd.reset();
+        return false;
+    }
+
+    return true;
 }
 
 bool bacnet_discover_device(int deviceInstance, BacnetDeviceInfo *outInfo) {
-    if (!outInfo || (!context.simulatorEnabled && context.socketFd < 0)) {
+    if (!outInfo || (!context.simulatorEnabled && !context.socketFd)) {
         return false;
     }
 
@@ -676,7 +684,7 @@ bool bacnet_discover_device(int deviceInstance, BacnetDeviceInfo *outInfo) {
 }
 
 bool bacnet_read_property(int deviceInstance, int objectType, int objectInstance, double *outValue) {
-    if (!outValue || (!context.simulatorEnabled && context.socketFd < 0)) {
+    if (!outValue || (!context.simulatorEnabled && !context.socketFd)) {
         return false;
     }
 
@@ -722,7 +730,7 @@ bool bacnet_read_property(int deviceInstance, int objectType, int objectInstance
 }
 
 bool bacnet_read_properties_multiple(const BacnetReadPropertyRequest *requests, size_t requestCount, BacnetReadPropertyResult *outResults) {
-    if (!requests || !outResults || requestCount == 0 || (!context.simulatorEnabled && context.socketFd < 0)) {
+    if (!requests || !outResults || requestCount == 0 || (!context.simulatorEnabled && !context.socketFd)) {
         return false;
     }
 
@@ -790,7 +798,7 @@ bool bacnet_read_properties_multiple(const BacnetReadPropertyRequest *requests, 
 }
 
 bool bacnet_write_property(int deviceInstance, int objectType, int objectInstance, double value) {
-    if (!context.simulatorEnabled && context.socketFd < 0) {
+    if (!context.simulatorEnabled && !context.socketFd) {
         return false;
     }
 
@@ -847,7 +855,7 @@ bool bacnet_subscribe_cov(int deviceInstance,
                           uint32_t subscriberProcessId,
                           uint32_t lifetimeSeconds,
                           bool confirmedNotifications) {
-    if (!context.simulatorEnabled && context.socketFd < 0) {
+    if (!context.simulatorEnabled && !context.socketFd) {
         return false;
     }
 
@@ -903,7 +911,7 @@ bool bacnet_subscribe_cov(int deviceInstance,
 }
 
 bool bacnet_poll_cov_notification(BacnetCovNotification *outNotification, int timeoutMs) {
-    if (!outNotification || (!context.simulatorEnabled && context.socketFd < 0)) {
+    if (!outNotification || (!context.simulatorEnabled && !context.socketFd)) {
         return false;
     }
 
@@ -984,9 +992,8 @@ bool bacnet_server_release_priority(int objectType, int objectInstance, int prio
 
 void bacnet_shutdown(void) {
     std::lock_guard<std::mutex> lock(context.mutex);
-    if (context.socketFd >= 0) {
-        close(context.socketFd);
-        context.socketFd = -1;
+    if (context.socketFd) {
+        context.socketFd.reset();
         context.deviceAddresses.clear();
         std::cout << "[BACnet] BACnet/IP client shut down" << std::endl;
     }

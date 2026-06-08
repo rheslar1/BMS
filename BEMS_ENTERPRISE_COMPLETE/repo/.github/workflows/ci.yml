@@ -21,7 +21,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
+            clang-tidy \
             cmake \
+            cppcheck \
             libgrpc++-dev \
             libprotobuf-dev \
             pkg-config \
@@ -54,6 +56,48 @@ jobs:
 
       - name: Test all C++ edge modules
         run: ctest --test-dir edge-core/build --output-on-failure
+
+      - name: Configure edge core ASan/UBSan
+        run: cmake --preset asan-ubsan
+        working-directory: edge-core
+
+      - name: Build edge core ASan/UBSan
+        run: cmake --build --preset asan-ubsan
+        working-directory: edge-core
+
+      - name: Test edge core ASan/UBSan
+        run: ctest --preset asan-ubsan
+        working-directory: edge-core
+
+      - name: Configure edge core ThreadSanitizer
+        run: cmake --preset tsan
+        working-directory: edge-core
+
+      - name: Build threaded tests with ThreadSanitizer
+        run: cmake --build --preset tsan --target edge-core-service-tests edge-core-bounded-queue-tests
+        working-directory: edge-core
+
+      - name: Run ThreadSanitizer threaded tests
+        run: ctest --preset tsan-threaded
+        working-directory: edge-core
+
+      - name: Run clang-tidy on edge core
+        run: |
+          cmake --preset static-analysis
+          cmake --build --preset static-analysis --target edge-core-service-tests edge-core-bounded-queue-tests
+        working-directory: edge-core
+
+      - name: Run cppcheck on edge core
+        run: |
+          cppcheck --enable=warning,style,performance,portability \
+            --language=c++ \
+            --std=c++17 \
+            --inline-suppr \
+            --suppressions-list=cppcheck-suppressions.txt \
+            --error-exitcode=1 \
+            --template=gcc \
+            src tests
+        working-directory: edge-core
 
       - name: Configure C++ field device firmware
         run: cmake -S field-device -B field-device/build

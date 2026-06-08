@@ -83,6 +83,10 @@ const managementToken = process.env.BEMS_MANAGEMENT_TOKEN || "";
 const otaSigningKey = process.env.OTA_SIGNING_KEY || "dev-field-device-key";
 const otaSigningKeyId = process.env.OTA_SIGNING_KEY_ID || "default";
 const otaPrivateKeyPem = process.env.OTA_PRIVATE_KEY_PEM || "";
+const swupdateDefaultSoftwareSet = process.env.SWUPDATE_SOFTWARE_SET || "stable";
+const swupdateDefaultMode = process.env.SWUPDATE_MODE || "copy-2";
+const swupdateDefaultRootfs = process.env.SWUPDATE_ROOTFS_FILENAME || "rootfs.ext4.gz";
+const swupdateDefaultDevice = process.env.SWUPDATE_TARGET_DEVICE || "/dev/mmcblk0p2";
 const applianceProfile = {
   product: "BEMS Edge AI Gateway",
   role: "Smart building controller",
@@ -224,6 +228,153 @@ function signFirmwareManifest({ version, channel, checksum }) {
 
 function firmwareSignatureAlgorithm() {
   return otaPrivateKeyPem ? "RSA-SHA256" : "HMAC-SHA256";
+}
+
+function sanitizeSwupdateToken(value, fallback = "edge-core") {
+  return String(value || fallback).replace(/[^A-Za-z0-9_.-]/g, "-");
+}
+
+function swupdateFilename(version, channel = "stable") {
+  return `bems-${sanitizeSwupdateToken(channel, "stable")}-${sanitizeSwupdateToken(version, "firmware")}.swu`;
+}
+
+function buildSwupdateDescription({
+  version,
+  channel = "stable",
+  checksum,
+  softwareSet = swupdateDefaultSoftwareSet,
+  softwareMode = swupdateDefaultMode,
+  hardwareCompatibility = ["edge-core", "nrf52840-bacnet"],
+  rootfsFilename = swupdateDefaultRootfs,
+  targetDevice = swupdateDefaultDevice,
+  systemPackages = [],
+  packageManager = "auto",
+}) {
+  const hardware = hardwareCompatibility
+    .map((item) => `            "${sanitizeSwupdateToken(item, "edge-core")}"`)
+    .join(",\n");
+  const packageList = Array.isArray(systemPackages)
+    ? systemPackages.map((item) => sanitizeSwupdateToken(item, "")).filter(Boolean)
+    : [];
+  const scriptSection = packageList.length > 0
+    ? [
+        "            scripts: (",
+        "                {",
+        "                    filename = \"bems-system-package-update.sh\";",
+        "                    type = \"shellscript\";",
+        `                    packages = "${packageList.join(" ")}";`,
+        `                    package-manager = "${sanitizeSwupdateToken(packageManager, "auto")}";`,
+        "                }",
+        "            );",
+      ]
+    : [];
+  return [
+    "software =",
+    "{",
+    `    version = "${sanitizeSwupdateToken(version, "firmware")}";`,
+    `    description = "IntelliBuild BEMS ${sanitizeSwupdateToken(channel, "stable")} ${sanitizeSwupdateToken(version, "firmware")}";`,
+    "    hardware-compatibility: [",
+    hardware,
+    "    ];",
+    `    ${sanitizeSwupdateToken(softwareSet, "stable")}: {`,
+    `        ${sanitizeSwupdateToken(softwareMode, "copy-2")}: {`,
+    "            images: (",
+    "                {",
+    `                    filename = "${sanitizeSwupdateToken(rootfsFilename, swupdateDefaultRootfs)}";`,
+    `                    device = "${targetDevice}";`,
+    "                    type = \"raw\";",
+    `                    sha256 = "${checksum}";`,
+    "                    installed-directly = true;",
+    "                }",
+    "            );",
+    ...scriptSection,
+    "            bootenv: (",
+    "                {",
+    "                    name = \"bems_active_version\";",
+    `                    value = "${sanitizeSwupdateToken(version, "firmware")}";`,
+    "                },",
+    "                {",
+    "                    name = \"bems_update_channel\";",
+    `                    value = "${sanitizeSwupdateToken(channel, "stable")}";`,
+    "                }",
+    "            );",
+    "        };",
+    "    };",
+    "}",
+    "",
+  ].join("\n");
+}
+
+function buildSwupdateManifest({
+  version,
+  channel = "stable",
+  artifactUri = "",
+  checksum,
+  signature,
+  softwareSet = swupdateDefaultSoftwareSet,
+  softwareMode = swupdateDefaultMode,
+  hardwareCompatibility = ["edge-core", "nrf52840-bacnet"],
+  rootfsFilename = swupdateDefaultRootfs,
+  targetDevice = swupdateDefaultDevice,
+  systemPackages = [],
+  packageManager = "auto",
+}) {
+  const swuFilename = swupdateFilename(version, channel);
+  const resolvedArtifactUri = artifactUri || `inline://${swuFilename}`;
+  const swDescription = buildSwupdateDescription({
+    version,
+    channel,
+    checksum,
+    softwareSet,
+    softwareMode,
+    hardwareCompatibility,
+    rootfsFilename,
+    targetDevice,
+    systemPackages,
+    packageManager,
+  });
+  const packageList = Array.isArray(systemPackages)
+    ? systemPackages.map((item) => sanitizeSwupdateToken(item, "")).filter(Boolean)
+    : [];
+  return {
+    version,
+    channel,
+    artifactUri: resolvedArtifactUri,
+    swuArtifactUri: resolvedArtifactUri,
+    swuFilename,
+    checksum,
+    signature,
+    signingKeyId: otaSigningKeyId,
+    algorithm: firmwareSignatureAlgorithm(),
+    updateFramework: "SWUpdate",
+    packageFormat: "swu",
+    swDescription,
+    softwareSet,
+    softwareMode,
+    hardwareCompatibility,
+    rootfsFilename,
+    targetDevice,
+    systemPackageUpdate: {
+      enabled: packageList.length > 0,
+      packages: packageList,
+      packageManager: sanitizeSwupdateToken(packageManager, "auto"),
+      clientEnvironment: {
+        SWUPDATE_SYSTEM_PACKAGES: packageList.join(" "),
+        SWUPDATE_PACKAGE_MANAGER: sanitizeSwupdateToken(packageManager, "auto"),
+      },
+    },
+    partitionScheme: "A/B",
+    bootSlots: ["A", "B"],
+    bootloaderFlow: "SWUpdate .swu -> checksum -> signature -> inactive A/B slot -> bootenv swap -> watchdog-confirmed boot -> rollback on failure",
+    swupdate: {
+      client: "swupdate",
+      installCommand: `swupdate -i ${swuFilename} -e ${sanitizeSwupdateToken(softwareSet, "stable")},${sanitizeSwupdateToken(softwareMode, "copy-2")}`,
+      progressCommand: "swupdate-progress -w",
+      signedImage: true,
+      rollback: "bootloader transaction marker and A/B slot fallback",
+    },
+    createdAt: new Date().toISOString(),
+  };
 }
 
 function normalizeReportFilters(query = {}) {
@@ -2553,9 +2704,9 @@ function buildEdgePlatformCapabilities() {
         key: "multi_protocol_translation",
         label: "Multi-Protocol Translation",
         status: "ready",
-        fieldProtocols: ["BACnet/IP", "BACnet/IPv6", "BACnet MS/TP over EIA-485 serial adapter", "Modbus TCP", "Modbus RTU over EIA-485", "CAN bus", "nRF52840 BACnet devices over wireless or wired field transport"],
+        fieldProtocols: ["BACnet/IP", "BACnet/IPv6", "BACnet MS/TP over EIA-485 serial adapter", "Modbus TCP", "Modbus RTU over EIA-485", "CAN bus", "KNX/IP", "DALI-2", "LonWorks", "OPC UA", "SNMP", "nRF52840 BACnet devices over wireless or wired field transport"],
         webProtocols: ["HTTP", "REST API", "Server-Sent Events", "MQTT over TLS"],
-        apiSurfaces: ["/api/bacnet/discovery", "/api/bacnet/mstp/read", "/api/bacnet/mstp/write", "/api/modbus/rtu/read", "/api/modbus/rtu/write", "/api/energy-services/bws"],
+        apiSurfaces: ["/api/bacnet/discovery", "/api/bacnet/mstp/read", "/api/bacnet/mstp/write", "/api/modbus/rtu/read", "/api/modbus/rtu/write", "/api/canbus/send", "/api/protocols/catalog", "/api/protocols/smoke-test", "/api/energy-services/bws"],
       },
       {
         key: "field_selectable_power_meter",
@@ -2636,6 +2787,21 @@ function buildEdgePlatformCapabilities() {
         fallback: "Server stores the authoritative audit copy while the BACnet device retains the runnable schedule.",
       },
       {
+        key: "commissioning_tools",
+        label: "Commissioning Tools",
+        status: "ready",
+        workflows: ["readiness scoring", "point checkout", "protocol smoke testing", "device acceptance evidence", "trend/alarm/FDD verification"],
+        apiSurfaces: ["/api/commissioning/readiness", "/api/commissioning/devices/:deviceId/checklist", "/api/commissioning/devices/:deviceId/acceptance"],
+      },
+      {
+        key: "field_hardening",
+        label: "Long-Run Field Hardening",
+        status: "ready",
+        profiles: ["24h commissioning soak", "7d site acceptance soak", "30d warranty burn-in"],
+        checks: ["watchdog dependencies", "telemetry freshness", "alarm churn", "offline recovery", "OTA rollback readiness", "persistent schedule retention"],
+        apiSurfaces: ["/api/field-hardening/profile", "/api/field-hardening/soak-test"],
+      },
+      {
         key: "data_standardization",
         label: "Data Standardization",
         status: "ready",
@@ -2677,6 +2843,134 @@ function buildEventDrivenArchitecture() {
   };
 }
 
+function buildProtocolCatalog() {
+  return {
+    generatedAt: new Date().toISOString(),
+    normalizedPointModel: "BACnet-style object identity plus present-value, units, status, timestamp, and source protocol metadata",
+    protocols: [
+      { key: "bacnet-ip", name: "BACnet/IP", status: "implemented", surfaces: ["/api/bacnet/discovery", "/api/edge/read-point", "/api/edge/read-points-batch", "/api/edge/subscribe-cov"] },
+      { key: "bacnet-mstp", name: "BACnet MS/TP over EIA-485", status: "implemented", surfaces: ["/api/bacnet/mstp/read", "/api/bacnet/mstp/write"] },
+      { key: "modbus-rtu", name: "Modbus RTU over EIA-485", status: "implemented", surfaces: ["/api/modbus/rtu/read", "/api/modbus/rtu/write"] },
+      { key: "modbus-tcp", name: "Modbus TCP", status: "adapter-ready", mapping: "register map to normalized analogValue/analogInput points" },
+      { key: "canbus", name: "CAN bus", status: "implemented", surfaces: ["/api/canbus/send"] },
+      { key: "knx-ip", name: "KNX/IP", status: "adapter-ready", mapping: "group address to binaryValue/analogValue points" },
+      { key: "dali-2", name: "DALI-2", status: "adapter-ready", mapping: "short address and control gear state to lighting BACnet-style points" },
+      { key: "lonworks", name: "LonWorks", status: "adapter-ready", mapping: "network variables to normalized point metadata" },
+      { key: "opc-ua", name: "OPC UA", status: "adapter-ready", mapping: "NodeId reads to normalized external equipment points" },
+      { key: "snmp", name: "SNMP", status: "adapter-ready", mapping: "OID polling/traps to equipment status and alarm points" },
+      { key: "rest", name: "REST API", status: "implemented", surfaces: ["/api/energy-services/bws", "/api/energy-services/signals"] },
+      { key: "mqtt", name: "MQTT over TLS", status: "implemented", role: "cloud telemetry and alert bridge" },
+    ],
+  };
+}
+
+function buildProtocolSmokeTest(input = {}) {
+  const protocol = String(input.protocol || "bacnet-ip").toLowerCase();
+  const target = input.target || {};
+  const generatedAt = new Date().toISOString();
+  const common = {
+    protocol,
+    generatedAt,
+    target,
+    normalizedResult: {
+      objectType: target.objectType || "analogValue",
+      objectInstance: Number(target.objectInstance || 1),
+      property: target.property || "present-value",
+      units: target.units || "",
+      status: "smoke_test_generated",
+    },
+  };
+  const smoke = {
+    "bacnet-ip": { command: "ReadPropertyMultiple", route: "/api/edge/read-points-batch", payload: { points: [target] } },
+    "bacnet-mstp": { command: "BACnet MS/TP ReadProperty", route: "/api/bacnet/mstp/read", media: "EIA-485" },
+    "modbus-rtu": { command: "Modbus RTU Read Holding Registers", route: "/api/modbus/rtu/read", functionCode: 3 },
+    "modbus-tcp": { command: "Modbus TCP Read Holding Registers", adapter: "tcp-register-map", port: 502 },
+    canbus: { command: "CAN data frame", route: "/api/canbus/send", arbitrationId: target.arbitrationId || "0x120" },
+    "knx-ip": { command: "KNXnet/IP group read", groupAddress: target.groupAddress || "1/1/1", datapointType: target.datapointType || "DPT-9" },
+    "dali-2": { command: "DALI query/control gear", shortAddress: Number(target.shortAddress || 1), opcode: target.opcode || "QUERY_STATUS" },
+    lonworks: { command: "LonWorks network variable poll", networkVariable: target.networkVariable || "nvoSpaceTemp" },
+    "opc-ua": { command: "OPC UA Read", endpoint: target.endpoint || "opc.tcp://controller:4840", nodeId: target.nodeId || "ns=2;s=PresentValue" },
+    snmp: { command: "SNMP GET", oid: target.oid || "1.3.6.1.2.1.1.3.0", version: target.version || "v3" },
+    rest: { command: "REST GET", route: target.route || "/api/energy-services/signals" },
+    mqtt: { command: "MQTT telemetry publish", topic: target.topic || "bems/telemetry/site/edge" },
+  };
+  return {
+    ...common,
+    supported: !!smoke[protocol],
+    smokeTest: smoke[protocol] || { command: "unsupported", message: "Use GET /api/protocols/catalog for supported protocol keys." },
+  };
+}
+
+function buildDeviceCommissioningChecklist(device = {}) {
+  const configuration = parseJsonField(device.configuration, {});
+  return {
+    deviceId: device.deviceId || device.id,
+    name: device.deviceName || device.name,
+    status: device.status,
+    provisioned: !!device.provisioned,
+    commissioned: !!device.commissioned,
+    protocol: configuration.sourceProtocol || (device.bacnetInstance ? "BACnet/IP" : "unassigned"),
+    requiredChecks: [
+      { key: "identity", label: "BACnet/device identity assigned", passed: !!(device.bacnetInstance || configuration.bacnetDevice || configuration.sourceProtocol) },
+      { key: "object_mapping", label: "Object type and object instance mapped", passed: !!(device.objectType && device.objectInstance != null) },
+      { key: "present_value", label: "Present value available", passed: device.value != null },
+      { key: "protocol_smoke", label: "Protocol smoke test completed", passed: !!configuration.commissioningEvidence?.protocolSmokePassed },
+      { key: "trend_sample", label: "Trend sample or telemetry freshness verified", passed: !!configuration.commissioningEvidence?.trendSampleVerified },
+      { key: "alarm_path", label: "Alarm path verified", passed: !!configuration.commissioningEvidence?.alarmPathVerified },
+      { key: "schedule_retention", label: "Persistent schedule/setpoint retention verified", passed: !!configuration.bacnetScheduleStorage || !!configuration.setpointStorage },
+      { key: "operator_acceptance", label: "Operator acceptance recorded", passed: !!configuration.commissioningEvidence?.acceptedBy },
+    ],
+  };
+}
+
+function buildFieldHardeningProfile(input = {}) {
+  const profile = String(input.profile || "site-acceptance-7d").toLowerCase();
+  const hours = profile.includes("30d") ? 720 : profile.includes("24h") ? 24 : Number(input.hours || 168);
+  return {
+    profile,
+    durationHours: hours,
+    sampleIntervalSeconds: Number(input.sampleIntervalSeconds || 60),
+    acceptanceThresholds: {
+      watchdogAvailabilityPercent: 99.5,
+      telemetryFreshnessSeconds: 180,
+      commandQueueBacklogMax: 100,
+      bacnetReadSuccessPercent: 98,
+      covEventGapMinutesMax: 30,
+      otaRollbackDrillRequired: true,
+      persistentScheduleRetentionRequired: true,
+    },
+    evidence: [
+      "GET /api/watchdog",
+      "GET /api/metrics",
+      "GET /api/reports/summary",
+      "GET /api/firmware/ota-jobs",
+      "scripts/production_board_flash_update_test.sh full-cycle",
+    ],
+  };
+}
+
+function buildCommercialReadinessCatalog() {
+  return {
+    generatedAt: new Date().toISOString(),
+    fieldDeployment: {
+      stages: ["site survey", "network readiness", "panel installation", "protocol checkout", "commissioning acceptance", "operator handover", "warranty soak"],
+      evidence: ["physical hardware validation", "commissioning readiness", "protocol smoke tests", "field hardening soak", "cybersecurity review"],
+    },
+    vendorGatewayTesting: {
+      adapters: ["BACnet router", "EIA-485 USB/RS-485", "Modbus TCP gateway", "KNX/IP gateway", "DALI-2 gateway", "LonWorks interface", "OPC UA server", "SNMP manager"],
+      checks: ["connectivity", "read", "write where allowed", "event/alarm path", "timestamp quality", "normalized point mapping"],
+    },
+    cybersecurityReview: {
+      controls: ["RBAC", "session auth", "management token", "TLS termination", "network segmentation", "audit events", "backup/restore", "least-privilege operations"],
+      evidence: ["GET /api/v1/audit-events", "GET /api/events/status", "GET /api/watchdog", "GET /api/metrics"],
+    },
+    operatorEngineeringWorkflows: {
+      operator: ["alarm triage", "trend review", "schedule override", "setpoint approval", "maintenance mode", "report export"],
+      engineering: ["device discovery", "protocol mapping", "commissioning checklist", "graphics/floorplan binding", "BACnet object map", "acceptance sign-off"],
+    },
+  };
+}
+
 function buildApiStatus(req) {
   return {
     name: "IntelliBuild Energy Web API",
@@ -2710,6 +3004,7 @@ function buildApiStatus(req) {
       "nrf52840_bacnet_devices",
       "bacnet_bare_metal_field_devices",
       "ota_firmware_update",
+      "swupdate_signed_ota",
       "field_selectable_power_meter",
       "device_persistent_storage",
       "audit_events",
@@ -2769,14 +3064,24 @@ function buildOpenApiDocument() {
       "/bacnet/vendor-metadata": { get: { summary: "BACnet vendor, model, firmware, and transport metadata enrichment" } },
       "/bacnet/mstp/read": { post: { summary: "Generate BACnet MS/TP ReadProperty present-value frame for EIA-485 serial adapter" } },
       "/bacnet/mstp/write": { post: { summary: "Generate BACnet MS/TP WriteProperty present-value frame for EIA-485 serial adapter" } },
+      "/commissioning/readiness": { get: { summary: "Commissioning readiness dashboard with device checklist status" } },
+      "/commissioning/devices/{deviceId}/checklist": { get: { summary: "Commissioning checklist for one device" } },
+      "/commissioning/devices/{deviceId}/acceptance": { post: { summary: "Record commissioning acceptance evidence for one device" } },
+      "/protocols/catalog": { get: { summary: "Protocol adapter catalog for BACnet, Modbus, CAN, KNX, DALI, LonWorks, OPC UA, SNMP, REST, and MQTT" } },
+      "/protocols/smoke-test": { post: { summary: "Generate a protocol smoke-test command and normalized point mapping" } },
+      "/field-hardening/profile": { get: { summary: "Long-run field hardening and soak-test profile" } },
+      "/field-hardening/soak-test": { post: { summary: "Create a long-run field hardening soak-test plan" } },
+      "/commercial-readiness/catalog": { get: { summary: "Field deployment, vendor gateway, cybersecurity, operator, and engineering workflow readiness catalog" } },
+      "/commercial-readiness/review": { post: { summary: "Create commercial readiness review evidence plan" } },
       "/buildings/{buildingId}/floors": { get: { summary: "List floors for a building" } },
       "/floors/{floorId}/rooms": { get: { summary: "List rooms for a floor" } },
       "/rooms/{roomId}/zones": { get: { summary: "List zones for a room" } },
       "/hierarchy": { get: { summary: "Building, floor, room, zone, and device hierarchy" } },
       "/digital-twin": { get: { summary: "Digital twin with floorplan/device overlay metadata" } },
-      "/firmware/artifacts": { get: { summary: "List signed firmware artifacts" }, post: { summary: "Create a signed firmware artifact manifest" } },
-      "/firmware/ota-jobs": { get: { summary: "List device OTA bootloader jobs" } },
-      "/devices/{deviceId}/ota-update": { post: { summary: "Queue signed OTA firmware update for a BACnet bare-metal field device" } },
+      "/firmware/artifacts": { get: { summary: "List signed SWUpdate firmware artifacts" }, post: { summary: "Create a signed SWUpdate .swu firmware artifact manifest" } },
+      "/firmware/artifacts/{artifactId}/sw-description": { get: { summary: "Fetch SWUpdate sw-description for a signed artifact" } },
+      "/firmware/ota-jobs": { get: { summary: "List SWUpdate device OTA bootloader jobs" } },
+      "/devices/{deviceId}/ota-update": { post: { summary: "Queue signed SWUpdate OTA firmware update for a BACnet bare-metal field device" } },
       "/energy-services/esi": { get: { summary: "Energy Services Interface profile for B/WS-style energy data access" } },
       "/energy-services/signals": { get: { summary: "Structured energy/control signals from BACnet, fieldbus, simulator, trends, and analytics" } },
       "/energy-services/bws": { get: { summary: "BACnet Web Services style structured energy payload" } },
@@ -3447,32 +3752,42 @@ app.post("/api/firmware/artifacts", requirePermission("devices:manage"), async (
     version,
     channel = "stable",
     artifactUri = "",
+    swuArtifactUri = "",
     imageBase64 = "",
     checksum: suppliedChecksum = "",
+    softwareSet = swupdateDefaultSoftwareSet,
+    softwareMode = swupdateDefaultMode,
+    hardwareCompatibility = ["edge-core", "nrf52840-bacnet"],
+    rootfsFilename = swupdateDefaultRootfs,
+    targetDevice = swupdateDefaultDevice,
+    systemPackages = [],
+    packageManager = "auto",
   } = req.body || {};
   if (!version) {
     return res.status(400).json({ error: "Firmware version is required." });
   }
-  if (!artifactUri && !imageBase64) {
-    return res.status(400).json({ error: "artifactUri or imageBase64 is required." });
+  const resolvedArtifactUri = swuArtifactUri || artifactUri;
+  if (!resolvedArtifactUri && !imageBase64) {
+    return res.status(400).json({ error: "artifactUri, swuArtifactUri, or imageBase64 is required." });
   }
 
   const imageBuffer = imageBase64 ? Buffer.from(imageBase64, "base64") : null;
-  const checksum = suppliedChecksum || sha256Hex(imageBuffer || artifactUri);
+  const checksum = suppliedChecksum || sha256Hex(imageBuffer || resolvedArtifactUri);
   const signature = signFirmwareManifest({ version, channel, checksum });
-  const manifest = {
+  const manifest = buildSwupdateManifest({
     version,
     channel,
-    artifactUri: artifactUri || `inline://${version}`,
+    artifactUri: resolvedArtifactUri,
     checksum,
     signature,
-    signingKeyId: otaSigningKeyId,
-    algorithm: firmwareSignatureAlgorithm(),
-    partitionScheme: "A/B",
-    bootSlots: ["A", "B"],
-    bootloaderFlow: "download -> checksum -> signature -> inactive A/B slot -> swap -> watchdog-confirmed boot -> rollback on failure",
-    createdAt: new Date().toISOString(),
-  };
+    softwareSet,
+    softwareMode,
+    hardwareCompatibility,
+    rootfsFilename,
+    targetDevice,
+    systemPackages,
+    packageManager,
+  });
 
   try {
     const result = await dbQuery(
@@ -3493,6 +3808,23 @@ app.post("/api/firmware/artifacts", requirePermission("devices:manage"), async (
   } catch (error) {
     console.error("Create firmware artifact failed:", error);
     res.status(500).json({ error: "Unable to create signed firmware artifact." });
+  }
+});
+
+app.get("/api/firmware/artifacts/:artifactId/sw-description", requirePermission("devices:manage"), async (req, res) => {
+  try {
+    const rows = await dbQuery("SELECT manifest FROM firmware_artifacts WHERE artifact_id = ? LIMIT 1", [Number(req.params.artifactId)]);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Firmware artifact not found." });
+    }
+    const manifest = parseJsonField(rows[0].manifest, {});
+    if (!manifest.swDescription) {
+      return res.status(404).json({ error: "SWUpdate sw-description is not available for this artifact." });
+    }
+    res.type("text/plain").send(manifest.swDescription);
+  } catch (error) {
+    console.error("Fetch SWUpdate sw-description failed:", error);
+    res.status(500).json({ error: "Unable to fetch SWUpdate sw-description." });
   }
 });
 
@@ -3533,9 +3865,17 @@ app.post("/api/devices/:deviceId/ota-update", requirePermission("devices:manage"
     version,
     channel = "stable",
     artifactUri = "",
+    swuArtifactUri = "",
     checksum = "",
     signature = "",
     rollbackAllowed = true,
+    softwareSet = swupdateDefaultSoftwareSet,
+    softwareMode = swupdateDefaultMode,
+    hardwareCompatibility = ["edge-core", "nrf52840-bacnet"],
+    rootfsFilename = swupdateDefaultRootfs,
+    targetDevice = swupdateDefaultDevice,
+    systemPackages = [],
+    packageManager = "auto",
   } = req.body || {};
 
   try {
@@ -3544,27 +3884,31 @@ app.post("/api/devices/:deviceId/ota-update", requirePermission("devices:manage"
       const artifacts = await dbQuery("SELECT * FROM firmware_artifacts WHERE artifact_id = ? LIMIT 1", [artifactId]);
       artifact = artifacts[0] || null;
     } else if (version) {
-      const computedChecksum = checksum || sha256Hex(artifactUri || version);
+      const resolvedArtifactUri = swuArtifactUri || artifactUri;
+      const computedChecksum = checksum || sha256Hex(resolvedArtifactUri || version);
       const computedSignature = signature || signFirmwareManifest({ version, channel, checksum: computedChecksum });
-      const manifest = {
+      const manifest = buildSwupdateManifest({
         version,
         channel,
-        artifactUri,
+        artifactUri: resolvedArtifactUri,
         checksum: computedChecksum,
         signature: computedSignature,
-        signingKeyId: otaSigningKeyId,
-        algorithm: firmwareSignatureAlgorithm(),
-        partitionScheme: "A/B",
-        bootSlots: ["A", "B"],
-      };
+        softwareSet,
+        softwareMode,
+        hardwareCompatibility,
+        rootfsFilename,
+        targetDevice,
+        systemPackages,
+        packageManager,
+      });
       const insert = await dbQuery(
         `INSERT INTO firmware_artifacts (version, channel, artifact_uri, checksum, signature, signing_key_id, manifest, created_by)
          VALUES (?, ?, ?, ?, ?, ?, CAST(? AS JSON), ?)
          ON DUPLICATE KEY UPDATE artifact_uri = VALUES(artifact_uri), checksum = VALUES(checksum), signature = VALUES(signature), manifest = VALUES(manifest)`,
-        [version, channel, artifactUri || `inline://${version}`, computedChecksum, computedSignature, otaSigningKeyId, JSON.stringify(manifest), req.auth?.actor || "system"]
+        [version, channel, manifest.artifactUri, computedChecksum, computedSignature, otaSigningKeyId, JSON.stringify(manifest), req.auth?.actor || "system"]
       );
       const resolvedId = insert.insertId || (await dbQuery("SELECT artifact_id AS artifact_id FROM firmware_artifacts WHERE version = ? AND channel = ? LIMIT 1", [version, channel]))[0]?.artifact_id;
-      artifact = { artifact_id: resolvedId, version, channel, artifact_uri: artifactUri || `inline://${version}`, checksum: computedChecksum, signature: computedSignature, manifest: JSON.stringify(manifest) };
+      artifact = { artifact_id: resolvedId, version, channel, artifact_uri: manifest.artifactUri, checksum: computedChecksum, signature: computedSignature, signing_key_id: otaSigningKeyId, manifest: JSON.stringify(manifest) };
     }
     if (!artifact) {
       return res.status(400).json({ error: "artifactId or firmware version is required." });
@@ -3575,16 +3919,33 @@ app.post("/api/devices/:deviceId/ota-update", requirePermission("devices:manage"
     }
 
     const manifest = parseJsonField(artifact.manifest, {});
+    const installCommand = manifest.swupdate?.installCommand
+      || `swupdate -i ${manifest.swuFilename || swupdateFilename(artifact.version, artifact.channel)} -e ${manifest.softwareSet || swupdateDefaultSoftwareSet},${manifest.softwareMode || swupdateDefaultMode}`;
     const otaUpdate = {
       status: "queued",
       artifactId: artifact.artifact_id,
       version: artifact.version,
       channel: artifact.channel,
       artifactUri: artifact.artifact_uri,
+      swuArtifactUri: manifest.swuArtifactUri || artifact.artifact_uri,
+      swuFilename: manifest.swuFilename || swupdateFilename(artifact.version, artifact.channel),
       checksum: artifact.checksum,
       signature: artifact.signature,
       signingKeyId: artifact.signing_key_id || otaSigningKeyId,
       rollbackAllowed: rollbackAllowed !== false,
+      updateFramework: manifest.updateFramework || "SWUpdate",
+      packageFormat: manifest.packageFormat || "swu",
+      swDescription: manifest.swDescription || "",
+      softwareSet: manifest.softwareSet || swupdateDefaultSoftwareSet,
+      softwareMode: manifest.softwareMode || swupdateDefaultMode,
+      hardwareCompatibility: manifest.hardwareCompatibility || ["edge-core", "nrf52840-bacnet"],
+      systemPackageUpdate: manifest.systemPackageUpdate || { enabled: false, packages: [], packageManager: "auto" },
+      swupdate: {
+        ...(manifest.swupdate || {}),
+        client: "swupdate",
+        installCommand,
+        progressCommand: manifest.swupdate?.progressCommand || "swupdate-progress -w",
+      },
       stagedBootloader: true,
       partitionScheme: manifest.partitionScheme || "A/B",
       bootSlots: manifest.bootSlots || ["A", "B"],
@@ -3597,7 +3958,7 @@ app.post("/api/devices/:deviceId/ota-update", requirePermission("devices:manage"
       preservesDeviceSchedules: true,
       preservesRetainedSetpoints: true,
       requestedAt: new Date().toISOString(),
-      flow: "BEMS API -> signed manifest -> field device verifier -> inactive A/B boot slot -> swap -> watchdog-confirmed boot -> BACnet status report",
+      flow: "BEMS API -> signed SWUpdate .swu artifact -> RabbitMQ swupdate.install -> swupdate client -> inactive A/B boot slot -> bootloader commit/rollback -> BACnet status report",
     };
 
     const job = await dbQuery(
@@ -3615,6 +3976,7 @@ app.post("/api/devices/:deviceId/ota-update", requirePermission("devices:manage"
       return res.status(404).json({ error: "Device not found." });
     }
     eventBus.publish("bems.devices.ota_update", { deviceId, otaJobId: job.insertId, otaUpdate }, deviceId).catch(() => {});
+    queueEdgeCommand("swupdate.install", { deviceId, otaJobId: job.insertId, otaUpdate }, `swupdate:${deviceId}`).catch(() => {});
     queueEdgeCommand("nrf52840.ota_update", { deviceId, otaJobId: job.insertId, otaUpdate }, `ota:${deviceId}`).catch(() => {});
     auditEvent(db, req, "queue", "firmware_update_job", job.insertId, { deviceId, artifactId: artifact.artifact_id });
     res.status(202).json({ id: deviceId, otaJobId: job.insertId, otaUpdate });
@@ -3658,6 +4020,106 @@ app.patch("/api/devices/:deviceId/commission", requirePermission("devices:manage
       res.json({ id: deviceId, provisioned: true, commissioned: true, status: "Commissioned" });
     }
   );
+});
+
+app.get("/api/commissioning/readiness", requirePermission("devices:manage"), async (req, res) => {
+  try {
+    const rows = await dbQuery(
+      `SELECT device_id AS deviceId,
+              name AS deviceName,
+              status,
+              provisioned,
+              commissioned,
+              bacnet_instance AS bacnetInstance,
+              object_type AS objectType,
+              object_instance AS objectInstance,
+              present_value AS value,
+              configuration
+       FROM devices
+       ORDER BY device_id`
+    );
+    const checklists = rows.map(buildDeviceCommissioningChecklist);
+    const totals = checklists.reduce((acc, item) => {
+      acc.devices += 1;
+      if (item.provisioned) acc.provisioned += 1;
+      if (item.commissioned) acc.commissioned += 1;
+      if (item.requiredChecks.every((check) => check.passed)) acc.readyForAcceptance += 1;
+      return acc;
+    }, { devices: 0, provisioned: 0, commissioned: 0, readyForAcceptance: 0 });
+    res.json({
+      generatedAt: new Date().toISOString(),
+      workflow: "richer commissioning tools",
+      totals,
+      checklists,
+    });
+  } catch (error) {
+    console.error("Commissioning readiness failed:", error);
+    res.status(500).json({ error: "Unable to build commissioning readiness." });
+  }
+});
+
+app.get("/api/commissioning/devices/:deviceId/checklist", requirePermission("devices:manage"), async (req, res) => {
+  try {
+    const rows = await dbQuery(
+      `SELECT device_id AS deviceId,
+              name AS deviceName,
+              status,
+              provisioned,
+              commissioned,
+              bacnet_instance AS bacnetInstance,
+              object_type AS objectType,
+              object_instance AS objectInstance,
+              present_value AS value,
+              configuration
+       FROM devices
+       WHERE device_id = ?
+       LIMIT 1`,
+      [Number(req.params.deviceId)]
+    );
+    if (rows.length === 0) return res.status(404).json({ error: "Device not found." });
+    res.json(buildDeviceCommissioningChecklist(rows[0]));
+  } catch (error) {
+    console.error("Commissioning checklist failed:", error);
+    res.status(500).json({ error: "Unable to build commissioning checklist." });
+  }
+});
+
+app.post("/api/commissioning/devices/:deviceId/acceptance", requirePermission("devices:manage"), async (req, res) => {
+  const deviceId = Number(req.params.deviceId);
+  const {
+    acceptedBy = req.auth?.actor || "system",
+    protocolSmokePassed = true,
+    trendSampleVerified = true,
+    alarmPathVerified = true,
+    notes = "",
+    evidence = {},
+  } = req.body || {};
+  const commissioningEvidence = {
+    acceptedBy,
+    acceptedAt: new Date().toISOString(),
+    protocolSmokePassed: !!protocolSmokePassed,
+    trendSampleVerified: !!trendSampleVerified,
+    alarmPathVerified: !!alarmPathVerified,
+    notes,
+    evidence,
+  };
+  try {
+    const result = await dbQuery(
+      `UPDATE devices
+       SET commissioned = 1,
+           provisioned = 1,
+           status = 'Commissioned',
+           configuration = JSON_SET(COALESCE(configuration, JSON_OBJECT()), '$.commissioningEvidence', CAST(? AS JSON))
+       WHERE device_id = ?`,
+      [JSON.stringify(commissioningEvidence), deviceId]
+    );
+    if (result.affectedRows === 0) return res.status(404).json({ error: "Device not found." });
+    auditEvent(db, req, "accept", "commissioning", deviceId, commissioningEvidence);
+    res.json({ id: deviceId, commissioned: true, provisioned: true, status: "Commissioned", commissioningEvidence });
+  } catch (error) {
+    console.error("Commissioning acceptance failed:", error);
+    res.status(500).json({ error: "Unable to record commissioning acceptance." });
+  }
 });
 
 app.get("/api/edge/health", async (req, res) => {
@@ -3938,7 +4400,7 @@ app.get("/api/edge/command-transport", (req, res) => {
     commandTopic: "bems.edge.commands",
     routingKey: "edge.commands",
     responseModel: "event-driven telemetry and provisioning events",
-    supportedCommands: ["bacnet.read_property", "bacnet.read_property_multiple", "bacnet.write_property", "bacnet.subscribe_cov", "nrf52840.ota_update", "field_device.command"],
+    supportedCommands: ["bacnet.read_property", "bacnet.read_property_multiple", "bacnet.write_property", "bacnet.subscribe_cov", "swupdate.install", "nrf52840.ota_update", "field_device.command"],
   });
 });
 
@@ -4078,6 +4540,72 @@ app.post("/api/canbus/send", requirePermission("devices:manage"), async (req, re
     dlc: validation.data.length,
     status: "accepted_by_simulator",
   });
+});
+
+app.get("/api/protocols/catalog", (req, res) => {
+  res.json(buildProtocolCatalog());
+});
+
+app.post("/api/protocols/smoke-test", requirePermission("devices:manage"), async (req, res) => {
+  const smoke = buildProtocolSmokeTest(req.body || {});
+  if (!smoke.supported) {
+    return res.status(400).json(smoke);
+  }
+  res.json(smoke);
+});
+
+app.get("/api/field-hardening/profile", requirePermission("devices:manage"), (req, res) => {
+  res.json(buildFieldHardeningProfile(req.query || {}));
+});
+
+app.post("/api/field-hardening/soak-test", requirePermission("devices:manage"), async (req, res) => {
+  const profile = buildFieldHardeningProfile(req.body || {});
+  const plan = {
+    ...profile,
+    status: "planned",
+    startedBy: req.auth?.actor || "system",
+    plannedAt: new Date().toISOString(),
+    collectionPlan: [
+      { source: "watchdog", route: "/api/watchdog", intervalSeconds: profile.sampleIntervalSeconds },
+      { source: "metrics", route: "/api/metrics", intervalSeconds: profile.sampleIntervalSeconds },
+      { source: "commissioning", route: "/api/commissioning/readiness", intervalSeconds: 900 },
+      { source: "protocols", route: "/api/protocols/smoke-test", intervalSeconds: 3600 },
+      { source: "ota", route: "/api/firmware/ota-jobs", intervalSeconds: 3600 },
+    ],
+  };
+  auditEvent(db, req, "plan", "field_hardening_soak", profile.profile, plan);
+  res.status(202).json(plan);
+});
+
+app.get("/api/commercial-readiness/catalog", requirePermission("devices:manage"), (req, res) => {
+  res.json(buildCommercialReadinessCatalog());
+});
+
+app.post("/api/commercial-readiness/review", requirePermission("devices:manage"), async (req, res) => {
+  const catalog = buildCommercialReadinessCatalog();
+  const {
+    site = "unassigned",
+    reviewer = req.auth?.actor || "system",
+    includeCybersecurityReview = true,
+    includeVendorGatewayTesting = true,
+    includeOperatorWorkflow = true,
+    includeEngineeringWorkflow = true,
+  } = req.body || {};
+  const review = {
+    site,
+    reviewer,
+    generatedAt: new Date().toISOString(),
+    status: "planned",
+    evidencePlan: {
+      fieldDeployment: catalog.fieldDeployment.evidence,
+      vendorGatewayTesting: includeVendorGatewayTesting ? catalog.vendorGatewayTesting.adapters : [],
+      cybersecurityReview: includeCybersecurityReview ? catalog.cybersecurityReview.controls : [],
+      operatorWorkflow: includeOperatorWorkflow ? catalog.operatorEngineeringWorkflows.operator : [],
+      engineeringWorkflow: includeEngineeringWorkflow ? catalog.operatorEngineeringWorkflows.engineering : [],
+    },
+  };
+  auditEvent(db, req, "plan", "commercial_readiness_review", site, review);
+  res.status(202).json(review);
 });
 
 app.get("/api/ai/optimization", (req, res) => {

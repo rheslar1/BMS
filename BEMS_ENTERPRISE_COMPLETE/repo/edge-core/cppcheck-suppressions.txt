@@ -1,0 +1,6 @@
+# Keep static-analysis exceptions explicit and reviewable.
+# Format: cppcheck-id:path
+missingIncludeSystem:*
+unusedFunction:*/tests/*
+# Public service schema fields are consumed by API callers and compatibility tests.
+unusedStructMember:src/edge_service.h

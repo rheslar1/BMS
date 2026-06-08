@@ -36,6 +36,9 @@ Zone display labels use `zonePath = floorName / roomName`; the stored zone remai
 - `PATCH /api/devices/:deviceId/range`
 - `PATCH /api/devices/:deviceId/provision`
 - `PATCH /api/devices/:deviceId/commission`
+- `GET /api/commissioning/readiness`
+- `GET /api/commissioning/devices/:deviceId/checklist`
+- `POST /api/commissioning/devices/:deviceId/acceptance`
 - `GET /api/edge/health`
 - `GET /api/energy/forecast`
 - `GET /api/energy-services/esi`
@@ -60,11 +63,17 @@ Zone display labels use `zonePath = floorName / roomName`; the stored zone remai
 - `POST /api/modbus/rtu/read`
 - `POST /api/modbus/rtu/write`
 - `POST /api/canbus/send`
+- `GET /api/protocols/catalog`
+- `POST /api/protocols/smoke-test`
+- `GET /api/field-hardening/profile`
+- `POST /api/field-hardening/soak-test`
+- `GET /api/commercial-readiness/catalog`
+- `POST /api/commercial-readiness/review`
 
 The edge API queues read, write, COV, OTA, and nRF52840 field-device commands through RabbitMQ AMQP when `EDGE_COMMAND_TRANSPORT=rabbitmq`. BACnet/IP operations include Who-Is/I-Am discovery, ReadProperty, ReadPropertyMultiple batch reads with single ReadProperty fallback, WriteProperty, SubscribeCOV, and ConfirmedCOVNotification/UnconfirmedCOVNotification ingestion. BACnet MS/TP endpoints generate ReadProperty and WriteProperty present-value frames for the implemented EIA-485 serial adapter path in the C++ fieldbus gateway. BACnet enrichment endpoints expose object-list point mapping, AHU/VAV/zone equipment relationships, and vendor/model/firmware metadata from discovered and provisioned devices. The runtime is COV-first; fallback polling is limited to critical points and explicit batch reads.
 Modbus RTU endpoints generate RS-485 request frames for holding-register reads and single-register writes. CAN bus endpoints validate classic CAN frames for SocketCAN-ready integration.
 
-The Energy Services Interface endpoints expose BACnet Web Services style structured energy data. They let an external energy data client consume complex building signals without depending on the underlying field network. The source can be BACnet/IP, Modbus RTU, CAN, simulator data, trend logs, analytics, or future external energy service protocols.
+The Energy Services Interface endpoints expose BACnet Web Services style structured energy data. They let an external energy data client consume complex building signals without depending on the underlying field network. The source can be BACnet/IP, BACnet MS/TP, Modbus RTU/TCP, CAN, KNX/IP, DALI-2, LonWorks, OPC UA, SNMP, simulator data, trend logs, analytics, REST, or MQTT over TLS. Commissioning, field-hardening, and commercial-readiness endpoints add readiness scoring, device acceptance evidence, protocol smoke tests, vendor gateway testing, cybersecurity review, operator/engineering workflow review, and long-run soak-test profiles.
 
 ## Real-Time SSE
 
@@ -124,9 +133,10 @@ Demand response exposes a utility-event adapter shape with OpenADR-ready metadat
 - `POST /api/devices/:deviceId/ota-update`
 - `GET /api/firmware/artifacts`
 - `POST /api/firmware/artifacts`
+- `GET /api/firmware/artifacts/:artifactId/sw-description`
 - `GET /api/firmware/ota-jobs`
 
-Creates signed firmware artifact manifests and queues signed OTA firmware updates for BACnet bare-metal field devices. The workflow records version, channel, artifact URI, checksum, signature, signing key id, rollback policy, job state, and staged bootloader metadata while preserving retained setpoints and device-resident BACnet schedules.
+Creates signed SWUpdate `.swu` firmware artifact manifests and queues signed OTA firmware updates for BACnet bare-metal field devices. The workflow records version, channel, SWUpdate artifact URI, checksum, signature, signing key id, `sw-description`, software set/mode, optional `systemPackages` and `packageManager`, rollback policy, job state, and staged A/B bootloader metadata while preserving retained setpoints and device-resident BACnet schedules. Device install commands are queued as RabbitMQ `swupdate.install` messages, and the edge client invokes `swupdate -i` with the configured software set and mode before applying explicit system package updates through `opkg`, `dnf`, or `apt`.
 
 - `GET /api/fdd/findings`
 - `POST /api/fdd/analyze`

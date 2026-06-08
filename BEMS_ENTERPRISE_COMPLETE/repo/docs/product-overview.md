@@ -17,11 +17,17 @@ The target product category is a commercial-grade BEMS comparable in scope to Si
 - Node.js Web API for REST commands, RabbitMQ edge orchestration, SSE browser live updates, remote management, watchdog health, and administration.
 - Python AI service for whole-building optimization, reinforcement learning, predictive simulation, and digital-twin upgrade paths.
 - C++ edge core with modular BACnet, BACnet server/device object database, writeback, fieldbus, AHU/VAV/chiller PID control strategies, and RabbitMQ command orchestration.
-- Buildable C++ bare-metal BACnet field-device firmware target with SOLID interfaces, simulator drivers, persistent storage, device-resident schedules, signed OTA bootloader flow, watchdog, and control strategy tests.
+- Buildable C++ bare-metal BACnet field-device firmware target with SOLID interfaces, simulator drivers, persistent storage, device-resident schedules, signed SWUpdate OTA bootloader flow, optional system package updates, watchdog, and control strategy tests.
 - Reporting center with scheduled reports, manual and due-run execution, notification outbox delivery records, filtered PDF/CSV/JSON exports, role-based report permissions, export audit history, and zone heat map.
 - React production UI direction modeled after commercial WebStation/SCADA workflows: command center, equipment graphics, floorplans, schedules, alarms, trend charts, digital twin, device provisioning, and admin.
 - Observability stack with health checks, Prometheus metrics, Grafana dashboards, Alertmanager email/Slack hooks, Watchtower auto-updates, and optional ELK logging.
 - CI/CD with container image builds, canary deployment scripts, multi-region deployment hooks, zero-downtime promotion/rollback, backups, and disaster recovery scripts.
+- Production physical board flashing and update-cycle validation runbook for Yocto image flashing, SWUpdate install, rollback, system package updates, RabbitMQ OTA command delivery, BACnet smoke tests, and nRF52840 checks.
+- Architecture implementation diff and traceability record showing the completed design against `docs/architecture.md`.
+- Richer commissioning tools with readiness scoring, per-device acceptance evidence, protocol smoke checks, trend/alarm verification, and audit records.
+- Broader protocol coverage for BACnet, Modbus, CAN, KNX/IP, DALI-2, LonWorks, OPC UA, SNMP, REST, and MQTT adapter contracts.
+- Long-run field hardening profiles for 24-hour commissioning, 7-day site acceptance, and 30-day warranty burn-in soak testing.
+- Commercial readiness workflows for field deployment evidence, vendor gateway testing, cybersecurity review, operator handover, and engineering handover.
 
 ## Core Modules
 

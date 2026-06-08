@@ -7,7 +7,7 @@ This folder contains a minimal `meta-bems` layer for Digi ConnectCore i.MX93 sty
 - `meta-bems/conf/layer.conf`: layer registration.
 - `meta-bems/conf/machine/edge-core.conf`: `MACHINE=edge-core` ARM64 machine profile for the BACnet/RabbitMQ edge runtime.
 - `recipes-bems/images/bems-edge-core-image.bb`: graphical image derived from `core-image-sato` with BEMS edge packages installed.
-- `recipes-bems/edge-core/edge-core.bb`: builds the C++ BACnet/control edge runtime with CMake and installs a systemd service.
+- `recipes-bems/edge-core/edge-core.bb`: builds the C++ BACnet/control edge runtime with CMake and installs systemd services, including the SWUpdate client wrapper.
 - `recipes-bems/node-api/node-api.bb`: packages the Node.js API under `/opt/bems/node-api`.
 
 ## Machine
@@ -18,7 +18,15 @@ Use the edge-core machine profile with:
 MACHINE=edge-core bitbake bems-edge-core-image
 ```
 
-The machine profile targets ARM64 Cortex-A55 class hardware, enables Ethernet/USB/serial/wireless features, and emits `wic.gz` plus `tar.bz2` artifacts. The `bems-edge-core-image` recipe derives from `core-image-sato` and installs the `edge-core` and `node-api` packages.
+The machine profile targets ARM64 Cortex-A55 class hardware, enables Ethernet/USB/serial/wireless features, and emits `wic.gz` plus `tar.bz2` artifacts. The `bems-edge-core-image` recipe derives from `core-image-sato` and installs the `edge-core`, `node-api`, and `swupdate` packages.
+
+## SWUpdate OTA
+
+Production builds should include the `meta-swupdate` layer so the `swupdate` package and bootloader integration are available. The Node API creates signed SWUpdate `.swu` artifact metadata, serves generated `sw-description`, and queues `swupdate.install` commands over RabbitMQ. The edge image installs `/usr/bin/bems-swupdate-client`, which downloads or opens the `.swu` image, verifies an optional SHA-256 checksum, invokes `swupdate -i`, and can apply explicit system package updates with `SWUPDATE_SYSTEM_PACKAGES` through `opkg`, `dnf`, or `apt`.
+
+## Production Board Flashing and Update-Cycle Test
+
+Use `../docs/production-board-flashing-and-update-cycle-testing.md` for the physical board validation runbook. The guarded harness is `../scripts/production_board_flash_update_test.sh` and supports `preflight`, `flash-media`, `validate-boot`, `ota-install`, `package-update`, `rabbitmq-ota-command`, `bacnet-smoke`, `nrf52840-smoke`, and `full-cycle`.
 
 ## Notes
 

@@ -1,2 +1,0 @@
-# Hashes of file build rules.
-4248b2aa166d872ce0fd04fc54a46470 generated/edge_service.pb.cc

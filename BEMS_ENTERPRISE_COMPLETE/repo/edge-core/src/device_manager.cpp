@@ -1,5 +1,6 @@
 #include "device_manager.h"
 #include "bacnet_client.h"
+#include <algorithm>
 #include <iostream>
 #include <utility>
 
@@ -23,7 +24,12 @@ DeviceManager::DeviceManager(const std::string &localAddress)
     : DeviceManager(localAddress, createDefaultBacnetClient()) {}
 
 DeviceManager::DeviceManager(const std::string &localAddress, std::shared_ptr<IBacnetClient> bacnetClient)
-    : localAddress_(localAddress), bacnetClient_(std::move(bacnetClient)) {
+    : DeviceManager(localAddress, 47808, std::move(bacnetClient)) {}
+
+DeviceManager::DeviceManager(const std::string &localAddress,
+                             unsigned short localPort,
+                             std::shared_ptr<IBacnetClient> bacnetClient)
+    : localAddress_(localAddress), localPort_(localPort), bacnetClient_(std::move(bacnetClient)) {
     devices_ = {
         {1, 1, 101, 1, "Lobby Temperature Sensor", "Analog Input", "VendorA", "TS-100", "192.168.1.11", "analogInput", "Celsius", 22.4, "normal"},
         {2, 1, 102, 1, "Floor 1 VAV", "Analog Output", "VendorA", "VAV-200", "192.168.1.12", "analogOutput", "Percent", 55.0, "normal"},
@@ -37,7 +43,7 @@ DeviceManager::~DeviceManager() {
 }
 
 bool DeviceManager::initialize() {
-    if (!bacnetClient_->initialize("EdgeCoreDevice", localAddress_, 47808)) {
+    if (!bacnetClient_->initialize("EdgeCoreDevice", localAddress_, localPort_)) {
         std::cerr << "Failed to initialize BACnet stack." << std::endl;
         return false;
     }
@@ -56,7 +62,19 @@ bool DeviceManager::refreshDevice(DeviceDetails &device) {
 }
 
 bool DeviceManager::readPoint(int deviceInstance, int objectType, int objectInstance, double &outValue) {
-    return bacnetClient_->readProperty({deviceInstance, objectType, objectInstance}, outValue);
+    const auto cachedPoint = std::find_if(devices_.begin(), devices_.end(), [&](const DeviceDetails &device) {
+        return device.bacnetInstance == deviceInstance &&
+               bacnetObjectTypeCode(device.objectType) == objectType &&
+               device.objectInstance == objectInstance;
+    });
+
+    if (cachedPoint == devices_.end()) {
+        return bacnetClient_->readProperty({deviceInstance, objectType, objectInstance}, outValue);
+    }
+
+    return bacnetClient_->readProperty(
+        {cachedPoint->bacnetInstance, objectType, cachedPoint->objectInstance},
+        outValue);
 }
 
 std::vector<DeviceDetails> &DeviceManager::getDevices() {

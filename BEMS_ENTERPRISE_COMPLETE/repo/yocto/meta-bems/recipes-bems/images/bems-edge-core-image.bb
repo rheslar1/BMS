@@ -9,4 +9,5 @@ IMAGE_FEATURES += "ssh-server-openssh package-management"
 CORE_IMAGE_EXTRA_INSTALL += " \
     edge-core \
     node-api \
+    swupdate \
 "

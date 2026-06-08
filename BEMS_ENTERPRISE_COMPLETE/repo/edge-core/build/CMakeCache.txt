@@ -14,6 +14,14 @@
 # EXTERNAL cache entries
 ########################
 
+//Enable AddressSanitizer and UndefinedBehaviorSanitizer for edge-core
+// targets
+BEMS_ENABLE_SANITIZERS:BOOL=OFF
+
+//Enable clang-tidy static analysis for edge-core targets when
+// available
+BEMS_ENABLE_STATIC_ANALYSIS:BOOL=OFF
+
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
 

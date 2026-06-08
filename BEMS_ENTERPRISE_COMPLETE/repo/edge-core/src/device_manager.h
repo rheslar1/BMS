@@ -26,6 +26,7 @@ class DeviceManager {
 public:
     explicit DeviceManager(const std::string &localAddress);
     DeviceManager(const std::string &localAddress, std::shared_ptr<IBacnetClient> bacnetClient);
+    DeviceManager(const std::string &localAddress, unsigned short localPort, std::shared_ptr<IBacnetClient> bacnetClient);
     ~DeviceManager();
 
     bool initialize();
@@ -36,6 +37,7 @@ public:
 
 private:
     std::string localAddress_;
+    unsigned short localPort_{47808};
     std::shared_ptr<IBacnetClient> bacnetClient_;
     std::vector<DeviceDetails> devices_;
 };

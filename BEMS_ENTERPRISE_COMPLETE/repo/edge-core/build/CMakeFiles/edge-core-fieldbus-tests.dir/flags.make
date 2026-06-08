@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/edge-core/src
 
-CXX_FLAGS = -std=gnu++17
+CXX_FLAGS = -std=c++17 -fvisibility=hidden -fvisibility-inlines-hidden -Wall -Wextra -Wpedantic -Wconversion -Wshadow
 
