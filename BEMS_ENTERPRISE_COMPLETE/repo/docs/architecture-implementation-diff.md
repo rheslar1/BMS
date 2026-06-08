@@ -35,7 +35,7 @@ Residual items are not software design gaps:
 | Field deployments and commercial readiness | Field deployment stages, vendor gateway testing, cybersecurity review, operator workflow, engineering workflow | `docs/commercial-readiness-field-deployment.md`, `GET /api/commercial-readiness/catalog`, `POST /api/commercial-readiness/review`, production harness `commercial-readiness` action | Site execution and sign-off required |
 | Reporting | Summary, heat map, scheduled reports, due-run/manual-run, exports, filters, role permissions | reporting endpoints in `node-api/server.js`, report migrations, `ui/src/App.jsx`, `reports:view`, `reports:export`, `reports:manage` | No software gap |
 | Admin users/RBAC | Admin user management, roles, sessions, audit | `node-api/auth.js`, auth/user routes, RBAC migrations, `ui/src/App.jsx` admin page | No software gap |
-| AI optimization | Python AI service with gRPC contract and HTTP fallback | `ai-service/app.py`, `proto/ai_service.proto`, `node-api/aiClient.js`, `ai-service/test_app.py` | No software gap |
+| AI optimization | Python AI service with PPO policy state, gRPC contract, and HTTP fallback | `ai-service/app.py`, `proto/ai_service.proto`, `node-api/aiClient.js`, `ai-service/test_app.py` | No software gap |
 | Observability | Prometheus, Grafana, Alertmanager, health endpoints | `docker/monitoring/*`, `GET /api/health`, `GET /api/metrics` | No software gap |
 
 ## Diff Summary From The Original Architecture Baseline

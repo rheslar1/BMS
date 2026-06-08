@@ -164,7 +164,7 @@ Tables:
 Purpose:
 
 - Persist optimization results.
-- Persist reinforcement-learning Q-values.
+- Persist PPO reinforcement policy/value state for zone/action decisions.
 - Store FDD findings and analytics events.
 - Support Smart Grid AI with demand response, price signals, and mixed HVAC/power optimization.
 

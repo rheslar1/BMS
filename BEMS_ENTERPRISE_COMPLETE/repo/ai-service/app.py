@@ -1,6 +1,6 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from json import dumps, loads
-from math import fabs
+from math import exp, fabs
 from concurrent import futures
 from os import environ
 from pathlib import Path
@@ -19,6 +19,9 @@ import ai_service_pb2_grpc
 
 RL_ACTIONS = [-1.5, -0.5, 0, 0.5, 1.5]
 Q_VALUES = {}
+PPO_ALGORITHM = "ppo_clipped_policy_optimization"
+PPO_CLIP_EPSILON = 0.2
+PPO_LEARNING_RATE = 0.22
 
 
 def clamp(value, low, high):
@@ -46,8 +49,45 @@ def q_value(zone_id, action):
     return Q_VALUES.get(q_key(zone_id, action), 0.0)
 
 
+def action_probabilities(zone_id):
+    logits = [q_value(zone_id, action) for action in RL_ACTIONS]
+    max_logit = max(logits)
+    weights = [exp(max(-30.0, min(30.0, logit - max_logit))) for logit in logits]
+    total = sum(weights) or 1.0
+    return {action: weight / total for action, weight in zip(RL_ACTIONS, weights)}
+
+
 def best_action(zone_id):
-    return max(RL_ACTIONS, key=lambda action: q_value(zone_id, action))
+    probabilities = action_probabilities(zone_id)
+    return max(RL_ACTIONS, key=lambda action: (probabilities[action], -fabs(action)))
+
+
+def ppo_policy_update(zone_id, action, reward):
+    key = q_key(zone_id, action)
+    current = Q_VALUES.get(key, 0.0)
+    old_probability = action_probabilities(zone_id).get(action, 1.0 / len(RL_ACTIONS))
+    advantage = reward - current
+    proposed = current + PPO_LEARNING_RATE * advantage
+
+    Q_VALUES[key] = proposed
+    new_probability = action_probabilities(zone_id).get(action, old_probability)
+    Q_VALUES[key] = current
+
+    ratio = new_probability / max(old_probability, 1e-9)
+    clipped_ratio = clamp(ratio, 1.0 - PPO_CLIP_EPSILON, 1.0 + PPO_CLIP_EPSILON)
+    next_value = round(current + PPO_LEARNING_RATE * clipped_ratio * advantage, 4)
+    Q_VALUES[key] = next_value
+
+    return {
+        "zoneId": zone_id,
+        "action": action,
+        "reward": reward,
+        "qValue": next_value,
+        "algorithm": PPO_ALGORITHM,
+        "clipEpsilon": PPO_CLIP_EPSILON,
+        "policyRatio": round(ratio, 4),
+        "clippedPolicyRatio": round(clipped_ratio, 4),
+    }
 
 
 def mode_bias(profile):
@@ -249,8 +289,14 @@ def optimize(payload):
             "buildingReward": round(building_reward, 4),
         },
         "learning": {
-            "algorithm": "epsilon_greedy_q_learning",
+            "algorithm": PPO_ALGORITHM,
             "actions": RL_ACTIONS,
+            "clipEpsilon": PPO_CLIP_EPSILON,
+            "mdp": {
+                "state": "hourly building environmental, occupancy, pricing, demand, and device context",
+                "action": "airflow or temperature/setpoint adjustment",
+                "reward": "comfort, energy, cost, peak-demand, and carbon-aware objective score",
+            },
             "stateCount": len(Q_VALUES),
         },
         "coordination": {
@@ -272,10 +318,7 @@ def feedback(payload):
     zone_id = payload["zoneId"]
     action = payload["action"]
     reward = float(payload["reward"])
-    key = q_key(zone_id, action)
-    current = Q_VALUES.get(key, 0.0)
-    Q_VALUES[key] = round(current + 0.22 * (reward - current), 4)
-    return {"zoneId": zone_id, "action": action, "reward": reward, "qValue": Q_VALUES[key]}
+    return ppo_policy_update(zone_id, action, reward)
 
 
 def simulate_physics(payload):

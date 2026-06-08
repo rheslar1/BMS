@@ -12,7 +12,10 @@ class AiServiceTests(unittest.TestCase):
 
         self.assertEqual(result["zoneId"], 1)
         self.assertEqual(result["action"], 0.5)
-        self.assertAlmostEqual(result["qValue"], 0.22)
+        self.assertEqual(result["algorithm"], app.PPO_ALGORITHM)
+        self.assertEqual(result["clipEpsilon"], app.PPO_CLIP_EPSILON)
+        self.assertGreater(result["qValue"], 0)
+        self.assertLessEqual(result["clippedPolicyRatio"], 1 + app.PPO_CLIP_EPSILON)
 
     def test_optimize_hydrates_persisted_policy(self):
         result = app.optimize({
@@ -35,6 +38,8 @@ class AiServiceTests(unittest.TestCase):
 
         self.assertEqual(result["zonePlans"][0]["learnedAction"], 1.5)
         self.assertEqual(result["learning"]["stateCount"], 1)
+        self.assertEqual(result["learning"]["algorithm"], app.PPO_ALGORITHM)
+        self.assertEqual(result["learning"]["mdp"]["action"], "airflow or temperature/setpoint adjustment")
         self.assertGreater(result["objective"]["estimatedSavingsKwh"], 0)
         self.assertEqual(result["coordination"]["strategy"], "whole_building_multi_zone_action_scoring")
         self.assertIn("globalState", result)

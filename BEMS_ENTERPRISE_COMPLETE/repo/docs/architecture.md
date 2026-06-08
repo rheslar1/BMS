@@ -337,11 +337,15 @@ Implemented in `ai-service/app.py`.
 - HTTP fallback endpoints: `POST /optimize`, `POST /feedback`
 - gRPC service: `bems.ai.v1.AiOptimizationService` on port `50052`
 - Whole-building multi-zone optimization
-- In-memory reinforcement-learning Q-value state
+- PPO reinforcement-learning policy state for discrete HVAC airflow/setpoint actions
 - Reinforcement-learning policy hydration from Node/MySQL request payloads
 - Cost, comfort, and energy objective scoring
 
 The Node.js API calls this AI service over gRPC when `AI_GRPC_ENDPOINT` is configured. HTTP through `AI_SERVICE_URL` remains available for health checks and fallback operation. If the service is unavailable, the Node API keeps a local optimization fallback.
+
+The HVAC optimization problem is modeled as a Markov Decision Process (MDP). At each hourly control interval, the state contains current building environmental data, occupancy, weather, pricing, demand-response state, demand limit, comfort deviation, device present values, and maintenance lockouts. The action is an airflow, load, or temperature/setpoint adjustment for one or more zones. The reward favors comfort protection, lower energy use, lower cost, peak-demand avoidance, and reduced operational carbon impact.
+
+The target DRL agent uses Proximal Policy Optimization (PPO). In production this policy can be backed by deep neural networks that learn a general building-control policy instead of hand-selecting settings. The current repository keeps the service/API contract and a compact PPO-style policy/value state for simulator and integration use; a trained neural PPO model can replace the surrogate policy behind the same `Optimize` and `Feedback` calls.
 
 ### Service Contract Layer
 
@@ -629,8 +633,9 @@ The Python service optimizes a whole-building objective:
 - Energy reduction
 - Comfort protection
 - Cost reduction
+- Peak-demand and operational carbon reduction
 
-Reinforcement-learning feedback is persisted by the Node.js API in MySQL as zone/action Q-values. The persisted policy is loaded before whole-building optimization and passed to the Python AI service so optimization can resume learned behavior after service restarts. Optimization runs are also stored in a formal history table for audit and analytics.
+PPO reinforcement-learning feedback is persisted by the Node.js API in MySQL as compact zone/action policy values in the existing `rl_q_values` table. The persisted policy is loaded before whole-building optimization and passed to the Python AI service so optimization can resume learned behavior after service restarts. Optimization runs are also stored in a formal history table for audit, explainability, carbon accounting, and analytics.
 
 ### Autonomous AI Control Loop
 
@@ -644,17 +649,18 @@ Loop sequence:
 4. Run a predictive simulation and airflow graph pass before applying control.
 5. Optionally apply approved setpoint actions through device configuration/writeback APIs.
 6. Measure the updated building state.
-7. Compute reward from comfort protection, energy reduction, and peak avoidance.
+7. Compute reward from comfort protection, energy reduction, cost, carbon impact, and peak avoidance.
 8. Persist reinforcement-learning feedback and optimization history.
 9. Repeat continuously when the control loop is started.
 
-The current decision engine is intentionally deterministic and auditable, with an upgrade path to ML models in the Python AI service. The airflow model is represented as a graph message-passing structure so it can be replaced by a graph neural network while preserving the API contract.
+The current decision engine is intentionally deterministic and auditable where operator safety requires it, with the PPO/DRL policy isolated in the Python AI service contract. The airflow model is represented as a graph message-passing structure so it can be replaced by a graph neural network while preserving the API contract. The broader design supports fast generalization across building layouts: a trained PPO policy can be fine-tuned with limited site data instead of training a new model from scratch for every property, which is the meta-RL direction for future releases.
 
 Control objectives:
 
 - Keep occupied zones comfortable.
 - Minimize energy usage.
 - Avoid overload peaks and demand-response penalties.
+- Reduce global operational carbon emissions from heavy building power demand.
 - Preserve operator transparency through policy, reward, and simulation output.
 
 ## Application API Surface

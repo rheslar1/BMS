@@ -71,8 +71,8 @@ def build_sdd():
         [
             "React UI sends HTTP/JSON commands and receives SSE telemetry/alarm updates.",
             "Node.js API enforces authentication, RBAC, tenant context, orchestration, and persistence.",
-            "MySQL stores configuration, alarms, analytics, optimization history, and RL Q-values.",
-            "Node.js calls the Python AI service over gRPC for whole-building optimization.",
+            "MySQL stores configuration, alarms, analytics, optimization history, and PPO policy/value state.",
+            "Node.js calls the Python AI service over gRPC for whole-building PPO optimization.",
             "Node.js queues C++ edge-core discovery, read, write, COV, OTA, and forecast commands through RabbitMQ AMQP.",
             "The C++ edge core communicates with BACnet/IP networks over UDP/BVLC.",
             "HVAC devices expose BACnet objects for telemetry, status, and command writeback.",
@@ -154,7 +154,7 @@ def build_sdd():
             "State: current building condition across zones, devices, weather, pricing, occupancy, demand response, and peak-load context.",
             "Action: control decisions such as setpoint adjustment, schedule profile, ventilation bias, or hold action.",
             "Reward: performance score balancing comfort protection, energy reduction, cost reduction, and peak avoidance.",
-            "Policy: learned action strategy persisted as zone/action Q-values in MySQL.",
+            "Policy: PPO action strategy persisted as compact zone/action policy values in MySQL.",
             "History: optimization runs are stored for audit, analytics, explainability, and retraining.",
         ],
     )
@@ -175,7 +175,7 @@ def build_sdd():
     add_image_if_present(doc, "uml_data_model.png", "Data model diagram")
     doc.add_paragraph(
         "Primary tables include organizations, sites, users, roles, sessions, audit events, "
-        "buildings, floors, rooms, zones, devices, alarms, alarm logs, trend logs, schedules, holiday schedules, special events, analytics events, RL Q-values, optimization history, "
+        "buildings, floors, rooms, zones, devices, alarms, alarm logs, trend logs, schedules, holiday schedules, special events, analytics events, PPO policy state, optimization history, "
         "FDD findings, and maintenance tickets."
     )
 
@@ -293,7 +293,7 @@ def build_sdp():
             "Alarms stream to the UI through SSE.",
             "Telemetry streams to charts and live feed through SSE.",
             "Maintenance tickets and FDD findings support operator workflows.",
-            "Optimization history and RL Q-values support AI audit and retraining.",
+            "Optimization history and PPO policy state support AI audit, adaptation, and retraining.",
         ],
     )
 

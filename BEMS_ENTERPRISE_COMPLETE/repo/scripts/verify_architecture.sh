@@ -565,10 +565,11 @@ checks=(
   "docs/architecture.md:AWS IoT Core"
   "docs/architecture.md:Node-RED"
   "docs/architecture.md:Sedona"
-  "docs/bems-backend-design.md:Designing Your Own BEMS Backend"
+  "docs/bems-backend-design.md:IntelliBuild Energy Backend Design"
   "docs/bems-backend-design.md:Server-Sent Events"
   "docs/bems-backend-design.md:Smart Grid AI Design"
-  "docs/bems-backend-design.md:Real-Time Monitoring Design"
+  "docs/bems-backend-design.md:Real-Time Monitoring"
+  "docs/bems-backend-design.md:PPO"
   "docs/database-schema.md:BMS/BEMS Database Schema Design"
   "docs/database-schema.md:Trend logging"
 )

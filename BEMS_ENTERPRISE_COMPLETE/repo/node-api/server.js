@@ -1889,6 +1889,9 @@ function startControlLoop(intervalMs, options = {}) {
 
 const rlPolicyState = new Map();
 const rlActions = [-1.5, -0.5, 0, 0.5, 1.5];
+const ppoAlgorithm = "ppo_clipped_policy_optimization";
+const ppoClipEpsilon = 0.2;
+const ppoLearningRate = 0.22;
 let rlPolicyLoaded = false;
 
 function qKey(zoneId, action) {
@@ -1899,21 +1902,54 @@ function qValue(zoneId, action) {
   return rlPolicyState.get(qKey(zoneId, action)) || 0;
 }
 
-function bestZoneAction(zoneId, exploration = 0.12) {
-  if (Math.random() < exploration) {
-    return rlActions[Math.floor(Math.random() * rlActions.length)];
-  }
-  return rlActions.reduce((best, action) => (qValue(zoneId, action) > qValue(zoneId, best) ? action : best), rlActions[0]);
+function ppoActionProbabilities(zoneId) {
+  const logits = rlActions.map((action) => qValue(zoneId, action));
+  const maxLogit = Math.max(...logits);
+  const weights = logits.map((logit) => Math.exp(Math.max(-30, Math.min(30, logit - maxLogit))));
+  const total = weights.reduce((sum, weight) => sum + weight, 0) || 1;
+  return rlActions.map((action, index) => ({
+    action,
+    probability: weights[index] / total,
+    policyValue: qValue(zoneId, action),
+  }));
+}
+
+function ppoProbability(zoneId, action) {
+  return ppoActionProbabilities(zoneId).find((item) => item.action === action)?.probability || (1 / rlActions.length);
+}
+
+function bestZoneAction(zoneId) {
+  return ppoActionProbabilities(zoneId).reduce((best, candidate) => {
+    if (candidate.probability > best.probability) return candidate;
+    if (candidate.probability === best.probability && Math.abs(candidate.action) < Math.abs(best.action)) return candidate;
+    return best;
+  }).action;
 }
 
 function updateRlPolicy({ zoneId, action, reward }) {
-  const learningRate = 0.22;
   const key = qKey(zoneId, action);
   const current = rlPolicyState.get(key) || 0;
-  const next = current + learningRate * (reward - current);
+  const oldProbability = ppoProbability(zoneId, Number(action));
+  const advantage = Number(reward) - current;
+  const proposed = current + ppoLearningRate * advantage;
+  rlPolicyState.set(key, proposed);
+  const newProbability = ppoProbability(zoneId, Number(action));
+  rlPolicyState.set(key, current);
+  const ratio = newProbability / Math.max(oldProbability, 1e-9);
+  const clippedRatio = clamp(ratio, 1 - ppoClipEpsilon, 1 + ppoClipEpsilon);
+  const next = current + ppoLearningRate * clippedRatio * advantage;
   const qValueNext = Number(next.toFixed(4));
   rlPolicyState.set(key, qValueNext);
-  return { zoneId, action, reward, qValue: qValueNext };
+  return {
+    zoneId,
+    action,
+    reward,
+    qValue: qValueNext,
+    algorithm: ppoAlgorithm,
+    clipEpsilon: ppoClipEpsilon,
+    policyRatio: Number(ratio.toFixed(4)),
+    clippedPolicyRatio: Number(clippedRatio.toFixed(4)),
+  };
 }
 
 async function loadRlPolicyFromDb() {
@@ -2137,8 +2173,14 @@ function buildBuildingOptimization(rows, modeInput = {}) {
       estimatedCostSavings: Number((totalEnergySavings * 0.14).toFixed(2)),
     },
     learning: {
-      algorithm: "epsilon_greedy_q_learning",
+      algorithm: ppoAlgorithm,
       actions: rlActions,
+      clipEpsilon: ppoClipEpsilon,
+      mdp: {
+        state: "hourly building environmental, occupancy, pricing, demand, and device context",
+        action: "airflow or temperature/setpoint adjustment",
+        reward: "comfort, energy, cost, peak-demand, and carbon-aware objective score",
+      },
       stateCount: rlPolicyState.size,
     },
     zonePlans,
@@ -3100,7 +3142,7 @@ function buildOpenApiDocument() {
       "/reports/energy.pdf": { get: { summary: "PDF energy report export" } },
       "/alarms/stream": { get: { summary: "Alarm Server-Sent Events stream" } },
       "/alarm-logs": { get: { summary: "Append-only alarm event log" } },
-      "/ai/reinforcement/policy": { get: { summary: "Persisted reinforcement-learning Q-values" } },
+      "/ai/reinforcement/policy": { get: { summary: "Persisted PPO reinforcement policy state" } },
       "/ai/optimization-history": { get: { summary: "Persisted optimization run history" } },
       "/ai/decision-loop": { post: { summary: "Run basic energy decision engine and optionally apply setpoint decisions" } },
       "/ai/predictive-simulation": { post: { summary: "Predict outcomes in the digital twin before applying controls" } },

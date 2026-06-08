@@ -38,7 +38,7 @@ These are the sellable product modules.
 | Monitoring | Real-time HVAC, energy, alarms, trends, and device state visibility | React dashboard, SSE telemetry/alarm streams, trend logs, energy KPI cards, cost/carbon footprint API |
 | Control | BACnet command writes with safety checks and operator approval | RabbitMQ edge commands, BACnet WriteProperty, safe writeback rollback, setpoint/range APIs, maintenance lockout |
 | Scheduling | Occupancy and exception-based building operation | Daily/monthly/yearly schedules, building/zone/device overrides, holiday schedules, special events |
-| AI Optimization | Comfort, energy, cost, and peak-demand optimization | Python AI optimizer, RL Q-values, predictive simulation, Smart Grid AI, demand response adapter |
+| AI Optimization | Comfort, energy, cost, carbon, and peak-demand optimization | Python PPO/DRL optimizer, persisted policy state, predictive simulation, Smart Grid AI, demand response adapter |
 | Fault Detection | Detect abnormal operation and generate service workflow | FDD findings, alarm creation, maintenance tickets, stuck valve/fan/off-hours/simultaneous heat-cool checks |
 | Enterprise SaaS | Multi-site commercial operation | Organizations, sites, RBAC, user admin, audit events, feature flags, remote management |
 
@@ -165,8 +165,10 @@ Core SaaS concepts:
 
 ## AI And Control Capabilities
 
-- Reinforcement learning Q-values persisted in MySQL.
+- PPO reinforcement policy/value state persisted in MySQL.
 - Whole-building optimization across zones rather than isolated device tuning.
+- MDP-based hourly state/action/reward loop for airflow and temperature control.
+- Carbon-aware objective that reduces operational emissions from heavy building power demand.
 - Predictive simulation before applying real controls.
 - EnergyPlus integration path through configured model/weather/binary paths.
 - AI-driven demand response with utility event adapter and safety policy.
