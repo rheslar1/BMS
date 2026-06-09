@@ -67,8 +67,6 @@ const noSamplesHeatBand = {
   range: "none",
 };
 
-const floorplanSlots = ["lobby", "floor-one", "floor-two", "tower-lobby", "tower-floor"];
-
 const architectureRuntimeLayers = [
   {
     key: "ui",
@@ -141,48 +139,6 @@ function estimateZoneIntensityFromDevices(zone) {
   return Math.max(0, Math.min(1, average / 100));
 }
 
-function buildDashboardHeatZones(hierarchy, heatMap) {
-  const reportZones = heatMap?.zones || [];
-  const reportByZoneId = new Map(reportZones.map((zone) => [String(zone.zoneId), zone]));
-  const hierarchyZones = flattenZones(hierarchy || []);
-
-  if (hierarchyZones.length === 0) {
-    return reportZones.map((zone, index) => {
-      const hasSamples = zone.sampleCount > 0;
-      const heatBand = getTemperatureHeatBand(Number(zone.intensity || 0), hasSamples);
-      return {
-        id: zone.zoneId || index,
-        name: zone.zonePath || `Zone ${index + 1}`,
-        buildingName: zone.buildingName || "Building",
-        value: zone.averageValue ?? "-",
-        sampleCount: zone.sampleCount ?? 0,
-        heatBand,
-        slot: floorplanSlots[index % floorplanSlots.length],
-        devices: [],
-      };
-    });
-  }
-
-  return hierarchyZones.map((zone, index) => {
-    const reportZone = reportByZoneId.get(String(zone.id));
-    const hasSamples = reportZone ? reportZone.sampleCount > 0 : (zone.devices || []).some((device) => typeof device.value === "number");
-    const intensity = reportZone ? Number(reportZone.intensity || 0) : estimateZoneIntensityFromDevices(zone);
-    const heatBand = getTemperatureHeatBand(intensity, hasSamples);
-    const numericDevice = (zone.devices || []).find((device) => typeof device.value === "number");
-
-    return {
-      id: zone.id,
-      name: formatZonePath(zone),
-      buildingName: zone.buildingName,
-      value: reportZone?.averageValue ?? numericDevice?.value ?? "-",
-      sampleCount: reportZone?.sampleCount ?? (numericDevice ? 1 : 0),
-      heatBand,
-      slot: floorplanSlots[index % floorplanSlots.length],
-      devices: zone.devices || [],
-    };
-  });
-}
-
 function normalizeHeatGroupName(value, fallback) {
   return value == null || value === "" ? fallback : String(value);
 }
@@ -235,6 +191,7 @@ function addHeatZoneToGrid(building, zoneRecord) {
   }
 
   room.zones.push(zoneRecord);
+  building.zones.push(zoneRecord);
   room.sampleCount += Number(zoneRecord.sampleCount || 0);
   floor.zoneCount += 1;
   floor.sampleCount += Number(zoneRecord.sampleCount || 0);
@@ -254,6 +211,7 @@ function buildDashboardHeatGrid(hierarchy, heatMap) {
       id: building.id,
       name: building.name || "Building",
       floors: [],
+      zones: [],
       zoneCount: 0,
       sampleCount: 0,
     };
@@ -293,7 +251,7 @@ function buildDashboardHeatGrid(hierarchy, heatMap) {
     const buildingName = zone.buildingName || "Building";
     let building = fallbackBuildings.find((item) => item.name === buildingName);
     if (!building) {
-      building = { id: buildingName, name: buildingName, floors: [], zoneCount: 0, sampleCount: 0 };
+      building = { id: buildingName, name: buildingName, floors: [], zones: [], zoneCount: 0, sampleCount: 0 };
       fallbackBuildings.push(building);
     }
 
@@ -1568,20 +1526,24 @@ function ReportingCenter({ reportSummary, reportSchedules, reportExports, report
   );
 }
 
-function ReportHeatMap({ heatMap }) {
+function ReportHeatMap({ heatMap, hierarchy }) {
   if (!heatMap) return null;
-  const zones = heatMap.zones || [];
+  const buildings = buildDashboardHeatGrid(hierarchy, heatMap);
+  const zoneTotal = buildings.reduce((sum, building) => sum + building.zoneCount, 0);
+  const sampleTotal = buildings.reduce((sum, building) => sum + building.sampleCount, 0);
 
   return (
     <section style={{ ...panelStyle, padding: "16px", marginBottom: "24px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "baseline", flexWrap: "wrap", marginBottom: "14px" }}>
         <div>
-          <h2 style={{ margin: 0, color: "#2c5282" }}>Report Heat Map</h2>
-          <p style={{ margin: "6px 0 0", color: "#64748b" }}>Zone intensity from filtered trend averages for the reporting period.</p>
+          <h2 style={{ margin: 0, color: "#2c5282" }}>Building Zone Heat Map</h2>
+          <p style={{ margin: "6px 0 0", color: "#64748b" }}>{"Building -> Zone -> Floor -> Room grid from the live hierarchy and report trend averages."}</p>
         </div>
-        <span style={{ color: "#64748b", fontSize: "13px" }}>
-          {heatMap.scale?.min ?? 0} to {heatMap.scale?.max ?? 0}
-        </span>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", color: "#64748b", fontSize: "13px" }}>
+          <span>{zoneTotal} zones</span>
+          <span>{sampleTotal} samples</span>
+          <span>{heatMap.scale?.min ?? 0} to {heatMap.scale?.max ?? 0}</span>
+        </div>
       </div>
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "14px" }} aria-label="Temperature heat map legend">
         {[...temperatureHeatBands, noSamplesHeatBand].map((band) => (
@@ -1606,40 +1568,65 @@ function ReportHeatMap({ heatMap }) {
           </span>
         ))}
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "10px" }}>
-        {zones.map((zone) => {
-          const hasSamples = zone.sampleCount > 0;
-          const heatBand = getTemperatureHeatBand(zone.intensity, hasSamples);
-          return (
-            <div
-              key={zone.zoneId}
-              title={`${zone.zonePath}: ${heatBand.label}, ${zone.averageValue ?? "no samples"}`}
-              style={{
-                minHeight: "86px",
-                border: "1px solid #e2e8f0",
-                borderRadius: "6px",
-                padding: "10px",
-                background: heatBand.color,
-                color: heatBand.textColor,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-              }}
-            >
+
+      <div style={{ display: "grid", gap: "18px" }}>
+        {buildings.map((building) => (
+          <div key={building.id || building.name} style={{ borderTop: "1px solid #d9e2ef", paddingTop: "14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", marginBottom: "12px" }}>
               <div>
-                <strong style={{ display: "block", fontSize: "14px" }}>{zone.zonePath}</strong>
-                <span style={{ fontSize: "12px", opacity: 0.8 }}>{zone.buildingName}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", alignItems: "end" }}>
-                <div>
-                  <strong style={{ display: "block", fontSize: "20px" }}>{zone.averageValue ?? "-"}</strong>
-                  <span style={{ fontSize: "12px", opacity: 0.85 }}>{heatBand.label}</span>
-                </div>
-                <span style={{ fontSize: "12px", opacity: 0.85 }}>{zone.sampleCount} samples</span>
+                <h3 style={{ margin: 0, color: "#1f355e", fontSize: "17px" }}>{building.name}</h3>
+                <span style={{ color: "#64748b", fontSize: "13px" }}>{building.floors.length} floors | {building.zoneCount} zones | {building.sampleCount} samples</span>
               </div>
             </div>
-          );
-        })}
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "10px" }}>
+              {building.zones.map((zone) => {
+                const numericValue = Number(zone.value);
+                const valueLabel = Number.isFinite(numericValue) ? numericValue.toFixed(1) : "-";
+                return (
+                  <div
+                    key={`${building.id}-${zone.id}-${zone.floorName}-${zone.roomName}`}
+                    title={`${building.name} / ${zone.name} / ${zone.floorName} / ${zone.roomName}: ${zone.heatBand.label}, ${zone.value ?? "no samples"}`}
+                    style={{
+                      minHeight: "154px",
+                      border: "1px solid rgba(15, 23, 42, 0.12)",
+                      borderRadius: "6px",
+                      padding: "12px",
+                      background: zone.heatBand.color,
+                      color: zone.heatBand.textColor,
+                      display: "grid",
+                      gridTemplateRows: "auto 1fr auto",
+                      gap: "10px",
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <div style={{ display: "grid", gridTemplateColumns: "58px minmax(0, 1fr)", gap: "8px", alignItems: "baseline" }}>
+                      <span style={{ fontSize: "11px", opacity: 0.78 }}>Zone</span>
+                      <strong style={{ fontSize: "14px", lineHeight: 1.25 }}>{zone.name}</strong>
+                      <span style={{ fontSize: "11px", opacity: 0.78 }}>Floor</span>
+                      <span style={{ fontSize: "12px", opacity: 0.92, overflowWrap: "anywhere" }}>{zone.floorName}</span>
+                      <span style={{ fontSize: "11px", opacity: 0.78 }}>Room</span>
+                      <span style={{ fontSize: "12px", opacity: 0.92, overflowWrap: "anywhere" }}>{zone.roomName}</span>
+                    </div>
+                    <div style={{ alignSelf: "end" }}>
+                      <strong style={{ display: "block", fontSize: "24px", lineHeight: 1 }}>{valueLabel}</strong>
+                      <span style={{ fontSize: "12px", opacity: 0.86 }}>{zone.heatBand.label}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", fontSize: "11px", opacity: 0.86 }}>
+                      <span>{zone.sampleCount} samples</span>
+                      <span>{zone.devices.length} devices</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+        {buildings.length === 0 && (
+          <div style={{ border: "1px dashed #cbd5e1", borderRadius: "8px", padding: "18px", color: "#64748b", textAlign: "center" }}>
+            No building, floor, room, or zone heat-map data is available yet.
+          </div>
+        )}
       </div>
     </section>
   );
@@ -4361,7 +4348,7 @@ export default function App() {
             onRunDueSchedules={runDueReportSchedules}
           />
 
-          <ReportHeatMap heatMap={reportHeatMap} />
+          <ReportHeatMap heatMap={reportHeatMap} hierarchy={hierarchy} />
 
           <AutonomousModePanel
             form={autonomousForm}
