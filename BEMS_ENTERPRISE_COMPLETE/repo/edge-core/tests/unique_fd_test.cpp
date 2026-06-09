@@ -26,7 +26,9 @@ void testMoveConstructionTransfersOwnership() {
 
     UniqueFd moved(std::move(reader));
 
+    // cppcheck-suppress accessMoved
     assert(!reader);
+    // cppcheck-suppress accessMoved
     assert(reader.get() == -1);
     assert(moved.get() == readerFd);
     assert(descriptorOpen(readerFd));
@@ -52,7 +54,9 @@ void testMoveAssignmentClosesExistingAndTransfersOwnership() {
 
     destination = std::move(source);
 
+    // cppcheck-suppress accessMoved
     assert(!source);
+    // cppcheck-suppress accessMoved
     assert(source.get() == -1);
     assert(destination.get() == newDestinationFd);
     assert(!descriptorOpen(oldDestinationFd));
@@ -74,6 +78,7 @@ void testMoveAssignmentFromEmptyClosesDestination() {
 
     destination = std::move(empty);
 
+    // cppcheck-suppress accessMoved
     assert(!empty);
     assert(!destination);
     assert(destination.get() == -1);
@@ -86,6 +91,7 @@ void testMovedFromWrapperCanBeReset() {
     UniqueFd firstWriter(first[1]);
 
     UniqueFd destination(std::move(source));
+    // cppcheck-suppress accessMoved
     assert(!source);
 
     const auto second = openPipe();

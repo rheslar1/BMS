@@ -1,6 +1,7 @@
 #include "bacnet_object_database.h"
 
 #include <algorithm>
+#include <iterator>
 #include <sstream>
 
 namespace {
@@ -111,9 +112,9 @@ BacnetObjectRecord *BacnetDeviceObjectDatabase::findObject(BacnetObjectIdentifie
 std::vector<BacnetObjectIdentifier> BacnetDeviceObjectDatabase::objectList() const {
     std::vector<BacnetObjectIdentifier> identifiers;
     identifiers.reserve(objects_.size());
-    for (const auto &entry : objects_) {
-        identifiers.push_back(entry.first);
-    }
+    std::transform(objects_.begin(), objects_.end(), std::back_inserter(identifiers), [](const auto &entry) {
+        return entry.first;
+    });
     return identifiers;
 }
 
@@ -211,10 +212,11 @@ std::optional<double> BacnetDeviceObjectDatabase::effectivePresentValue(BacnetOb
     if (!record) {
         return std::nullopt;
     }
-    for (const auto &slot : record->priorityArray) {
-        if (slot) {
-            return *slot;
-        }
+    const auto activePriority = std::find_if(record->priorityArray.begin(), record->priorityArray.end(), [](const auto &slot) {
+        return slot.has_value();
+    });
+    if (activePriority != record->priorityArray.end()) {
+        return **activePriority;
     }
     if (record->relinquishDefault != 0.0) {
         return record->relinquishDefault;

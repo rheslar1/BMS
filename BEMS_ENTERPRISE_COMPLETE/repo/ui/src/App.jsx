@@ -52,6 +52,25 @@ const defaultAlarmColors = {
 
 const alarmSeverityKeys = ["critical", "warning", "info", "default", "cleared"];
 
+const temperatureHeatBands = [
+  { label: "Hot", minIntensity: 0.75, color: "#dc2626", textColor: "white", range: "75-100%" },
+  { label: "Warm", minIntensity: 0.5, color: "#f97316", textColor: "white", range: "50-75%" },
+  { label: "Mild", minIntensity: 0.25, color: "#facc15", textColor: "#0f172a", range: "25-50%" },
+  { label: "Cool", minIntensity: 0, color: "#2563eb", textColor: "white", range: "0-25%" },
+];
+
+const noSamplesHeatBand = {
+  label: "No samples",
+  color: "#f1f5f9",
+  textColor: "#475569",
+  range: "none",
+};
+
+function getTemperatureHeatBand(intensity, hasSamples) {
+  if (!hasSamples) return noSamplesHeatBand;
+  return temperatureHeatBands.find((band) => intensity >= band.minIntensity) || temperatureHeatBands[temperatureHeatBands.length - 1];
+}
+
 function normalizeSeverity(severity) {
   return String(severity || "default").toLowerCase();
 }
@@ -1209,13 +1228,6 @@ function ReportingCenter({ reportSummary, reportSchedules, reportExports, report
 function ReportHeatMap({ heatMap }) {
   if (!heatMap) return null;
   const zones = heatMap.zones || [];
-  const colorFor = (intensity, hasSamples) => {
-    if (!hasSamples) return "#f1f5f9";
-    if (intensity > 0.75) return "#dc2626";
-    if (intensity > 0.5) return "#f97316";
-    if (intensity > 0.25) return "#facc15";
-    return "#22c55e";
-  };
 
   return (
     <section style={{ ...panelStyle, padding: "16px", marginBottom: "24px" }}>
@@ -1228,20 +1240,44 @@ function ReportHeatMap({ heatMap }) {
           {heatMap.scale?.min ?? 0} to {heatMap.scale?.max ?? 0}
         </span>
       </div>
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "14px" }} aria-label="Temperature heat map legend">
+        {[...temperatureHeatBands, noSamplesHeatBand].map((band) => (
+          <span
+            key={band.label}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              border: "1px solid #e2e8f0",
+              borderRadius: "999px",
+              padding: "5px 9px",
+              color: "#334155",
+              fontSize: "12px",
+              fontWeight: 700,
+              background: "white",
+            }}
+            title={band.range}
+          >
+            <span style={{ width: "11px", height: "11px", borderRadius: "3px", background: band.color, display: "inline-block" }} />
+            {band.label}
+          </span>
+        ))}
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "10px" }}>
         {zones.map((zone) => {
           const hasSamples = zone.sampleCount > 0;
+          const heatBand = getTemperatureHeatBand(zone.intensity, hasSamples);
           return (
             <div
               key={zone.zoneId}
-              title={`${zone.zonePath}: ${zone.averageValue ?? "no samples"}`}
+              title={`${zone.zonePath}: ${heatBand.label}, ${zone.averageValue ?? "no samples"}`}
               style={{
                 minHeight: "86px",
                 border: "1px solid #e2e8f0",
                 borderRadius: "6px",
                 padding: "10px",
-                background: colorFor(zone.intensity, hasSamples),
-                color: hasSamples && zone.intensity > 0.45 ? "white" : "#0f172a",
+                background: heatBand.color,
+                color: heatBand.textColor,
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
@@ -1252,7 +1288,10 @@ function ReportHeatMap({ heatMap }) {
                 <span style={{ fontSize: "12px", opacity: 0.8 }}>{zone.buildingName}</span>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", gap: "8px", alignItems: "end" }}>
-                <strong style={{ fontSize: "20px" }}>{zone.averageValue ?? "-"}</strong>
+                <div>
+                  <strong style={{ display: "block", fontSize: "20px" }}>{zone.averageValue ?? "-"}</strong>
+                  <span style={{ fontSize: "12px", opacity: 0.85 }}>{heatBand.label}</span>
+                </div>
                 <span style={{ fontSize: "12px", opacity: 0.85 }}>{zone.sampleCount} samples</span>
               </div>
             </div>

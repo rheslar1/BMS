@@ -29,14 +29,15 @@ DeviceManager::DeviceManager(const std::string &localAddress, std::shared_ptr<IB
 DeviceManager::DeviceManager(const std::string &localAddress,
                              unsigned short localPort,
                              std::shared_ptr<IBacnetClient> bacnetClient)
-    : localAddress_(localAddress), localPort_(localPort), bacnetClient_(std::move(bacnetClient)) {
-    devices_ = {
+    : localAddress_(localAddress),
+      localPort_(localPort),
+      bacnetClient_(std::move(bacnetClient)),
+      devices_{
         {1, 1, 101, 1, "Lobby Temperature Sensor", "Analog Input", "VendorA", "TS-100", "192.168.1.11", "analogInput", "Celsius", 22.4, "normal"},
         {2, 1, 102, 1, "Floor 1 VAV", "Analog Output", "VendorA", "VAV-200", "192.168.1.12", "analogOutput", "Percent", 55.0, "normal"},
         {3, 2, 201, 1, "Floor 1 Fan", "Binary Output", "VendorB", "FAN-75", "192.168.1.13", "binaryOutput", "On/Off", 1.0, "on"},
         {4, 1, 250, 1, "Occupancy Schedule", "Schedule", "VendorA", "SCH-1", "192.168.1.14", "schedule", "Schedule", 1.0, "normal"},
-    };
-}
+      } {}
 
 DeviceManager::~DeviceManager() {
     bacnetClient_->shutdown();

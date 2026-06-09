@@ -22,7 +22,7 @@ std::string normalizeType(std::string value) {
 
 } // namespace
 
-PidController::PidController(PidGains gains) : gains_(gains) {}
+PidController::PidController(const PidGains &gains) : gains_(gains) {}
 
 double PidController::compute(double setpoint, double measuredValue, double deltaSeconds) {
     const double safeDelta = std::max(deltaSeconds, 1.0);

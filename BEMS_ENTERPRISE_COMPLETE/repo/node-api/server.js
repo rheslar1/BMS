@@ -654,7 +654,7 @@ function normalizeDateTimeString(value) {
 }
 
 function normalizeHealthStatus(status) {
-  return status === "ok" || status === "healthy" || status === "disabled";
+  return status === "ok" || status === "healthy" || status === "ready" || status === "disabled";
 }
 
 function managementAction(action, status = "accepted", details = {}) {

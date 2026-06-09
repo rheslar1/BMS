@@ -14,7 +14,7 @@ struct PidGains {
 
 class PidController {
 public:
-    explicit PidController(PidGains gains);
+    explicit PidController(const PidGains &gains);
     double compute(double setpoint, double measuredValue, double deltaSeconds);
     void reset();
 

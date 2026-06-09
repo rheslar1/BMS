@@ -79,7 +79,7 @@
       "configurePreset": "tsan",
       "filter": {
         "include": {
-          "regex": "edge-core-(service|bounded-queue)-tests"
+          "name": "edge-core-(service|bounded-queue)-tests"
         }
       },
       "output": {

@@ -3,6 +3,7 @@
 #include "unique_fd.h"
 
 #include <arpa/inet.h>
+#include <algorithm>
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
@@ -570,7 +571,8 @@ std::optional<BacnetCovNotification> parseCovNotification(const std::vector<uint
     }
 
     for (size_t i = cursor; i + 1 < packet.size(); ++i) {
-        if ((packet[i] & 0xF8) == 0x09) {
+        const uint8_t tag = packet[i];
+        if ((tag & 0xF8) == 0x08 && (tag & 0x07) == 1) {
             notification.subscriberProcessId = packet[i + 1];
         }
         if (packet[i] == 0x1C && i + 4 < packet.size()) {
@@ -691,7 +693,7 @@ bool bacnet_read_property(int deviceInstance, int objectType, int objectInstance
     std::lock_guard<std::mutex> lock(context.mutex);
     if (context.simulatorEnabled) {
         ensureSimulatedDevicesLocked();
-        auto *device = findSimulatedPointLocked(deviceInstance, objectType, objectInstance);
+        const auto *device = findSimulatedPointLocked(deviceInstance, objectType, objectInstance);
         if (!device) {
             return false;
         }
@@ -747,7 +749,7 @@ bool bacnet_read_properties_multiple(const BacnetReadPropertyRequest *requests, 
         ensureSimulatedDevicesLocked();
         bool anySuccess = false;
         for (size_t i = 0; i < requestCount; ++i) {
-            auto *device = findSimulatedPointLocked(requests[i].deviceInstance, requests[i].objectType, requests[i].objectInstance);
+            const auto *device = findSimulatedPointLocked(requests[i].deviceInstance, requests[i].objectType, requests[i].objectInstance);
             if (device) {
                 outResults[i].success = true;
                 outResults[i].value = device->presentValue;
@@ -939,11 +941,15 @@ bool bacnet_poll_cov_notification(BacnetCovNotification *outNotification, int ti
 
     char sourceIp[INET_ADDRSTRLEN] = {};
     inet_ntop(AF_INET, &received->second.sin_addr, sourceIp, sizeof(sourceIp));
-    for (const auto &entry : context.deviceAddresses) {
-        if (entry.second.sin_addr.s_addr == received->second.sin_addr.s_addr) {
-            notification->deviceInstance = entry.first;
-            break;
+    const auto matchingAddress = std::find_if(
+        context.deviceAddresses.begin(),
+        context.deviceAddresses.end(),
+        [&received](const auto &entry) {
+            return entry.second.sin_addr.s_addr == received->second.sin_addr.s_addr;
         }
+    );
+    if (matchingAddress != context.deviceAddresses.end()) {
+        notification->deviceInstance = matchingAddress->first;
     }
 
     if (notification->confirmed) {
