@@ -1,2 +1,0 @@
-/usr/bin/ar qc libbems_field_device.a CMakeFiles/bems_field_device.dir/src/field_device_firmware.cpp.o CMakeFiles/bems_field_device.dir/src/simulated_drivers.cpp.o
-/usr/bin/ranlib libbems_field_device.a

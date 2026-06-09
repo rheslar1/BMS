@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/bems_field_device_firmware.dir/src/main.cpp.o -o bems_field_device_firmware  libbems_field_device.a 

@@ -1,1 +1,0 @@
-/usr/bin/c++ "CMakeFiles/edge-core-hvac-control-tests.dir/tests/hvac_control_test.cpp.o" "CMakeFiles/edge-core-hvac-control-tests.dir/src/hvac_control.cpp.o" -o edge-core-hvac-control-tests 

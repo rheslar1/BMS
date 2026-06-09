@@ -1,1 +1,0 @@
-/usr/bin/c++ "CMakeFiles/edge-core-energy-ai-tests.dir/tests/energy_ai_test.cpp.o" "CMakeFiles/edge-core-energy-ai-tests.dir/src/energy_ai.cpp.o" -o edge-core-energy-ai-tests 

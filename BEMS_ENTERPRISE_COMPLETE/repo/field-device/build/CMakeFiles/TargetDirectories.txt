@@ -1,6 +1,0 @@
-/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/field-device/build/CMakeFiles/bems_field_device.dir
-/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/field-device/build/CMakeFiles/bems_field_device_firmware.dir
-/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/field-device/build/CMakeFiles/field_device_simulator_test.dir
-/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/field-device/build/CMakeFiles/test.dir
-/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/field-device/build/CMakeFiles/edit_cache.dir
-/home/admin/Documents/BMS/BEMS_ENTERPRISE_COMPLETE/repo/field-device/build/CMakeFiles/rebuild_cache.dir
