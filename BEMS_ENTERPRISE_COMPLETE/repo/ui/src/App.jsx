@@ -183,6 +183,145 @@ function buildDashboardHeatZones(hierarchy, heatMap) {
   });
 }
 
+function normalizeHeatGroupName(value, fallback) {
+  return value == null || value === "" ? fallback : String(value);
+}
+
+function createHeatZoneRecord(zone, reportZone, index = 0) {
+  const hasSamples = reportZone ? reportZone.sampleCount > 0 : (zone.devices || []).some((device) => typeof device.value === "number");
+  const intensity = reportZone ? Number(reportZone.intensity || 0) : estimateZoneIntensityFromDevices(zone);
+  const heatBand = getTemperatureHeatBand(intensity, hasSamples);
+  const numericDevice = (zone.devices || []).find((device) => typeof device.value === "number");
+
+  return {
+    id: zone.id ?? zone.zoneId ?? index,
+    name: zone.name || zone.zoneName || `Zone ${index + 1}`,
+    zonePath: zone.zonePath || zone.path || zone.displayName || reportZone?.zonePath || "",
+    buildingName: zone.buildingName || reportZone?.buildingName || "Building",
+    floorName: normalizeHeatGroupName(zone.floorName, "Unassigned Floor"),
+    roomName: normalizeHeatGroupName(zone.roomName, "Unassigned Room"),
+    roomNumber: zone.roomNumber || "",
+    value: reportZone?.averageValue ?? numericDevice?.value ?? "-",
+    minimumValue: reportZone?.minimumValue ?? null,
+    maximumValue: reportZone?.maximumValue ?? null,
+    sampleCount: reportZone?.sampleCount ?? (numericDevice ? 1 : 0),
+    lastSampleAt: reportZone?.lastSampleAt || null,
+    heatBand,
+    devices: zone.devices || [],
+  };
+}
+
+function addHeatZoneToGrid(building, zoneRecord) {
+  let floor = building.floors.find((item) => item.name === zoneRecord.floorName);
+  if (!floor) {
+    floor = {
+      name: zoneRecord.floorName,
+      rooms: [],
+      zoneCount: 0,
+      sampleCount: 0,
+    };
+    building.floors.push(floor);
+  }
+
+  let room = floor.rooms.find((item) => item.name === zoneRecord.roomName);
+  if (!room) {
+    room = {
+      name: zoneRecord.roomName,
+      roomNumber: zoneRecord.roomNumber,
+      zones: [],
+      sampleCount: 0,
+    };
+    floor.rooms.push(room);
+  }
+
+  room.zones.push(zoneRecord);
+  room.sampleCount += Number(zoneRecord.sampleCount || 0);
+  floor.zoneCount += 1;
+  floor.sampleCount += Number(zoneRecord.sampleCount || 0);
+  building.zoneCount += 1;
+  building.sampleCount += Number(zoneRecord.sampleCount || 0);
+}
+
+function buildDashboardHeatGrid(hierarchy, heatMap) {
+  const reportZones = heatMap?.zones || [];
+  const reportByZoneId = new Map(reportZones.map((zone) => [String(zone.zoneId), zone]));
+  const reportByBuildingAndPath = new Map(
+    reportZones.map((zone) => [`${zone.buildingName || ""}|${zone.zonePath || ""}`, zone])
+  );
+
+  const buildings = (hierarchy || []).map((building) => {
+    const heatBuilding = {
+      id: building.id,
+      name: building.name || "Building",
+      floors: [],
+      zoneCount: 0,
+      sampleCount: 0,
+    };
+
+    getBuildingZones(building).forEach((zone, index) => {
+      const zonePath = formatZonePath(zone);
+      const reportZone =
+        reportByZoneId.get(String(zone.id)) ||
+        reportByBuildingAndPath.get(`${building.name || ""}|${zonePath}`);
+
+      addHeatZoneToGrid(
+        heatBuilding,
+        createHeatZoneRecord(
+          {
+            ...zone,
+            zonePath,
+            buildingName: building.name,
+          },
+          reportZone,
+          index
+        )
+      );
+    });
+
+    heatBuilding.floors.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    heatBuilding.floors.forEach((floor) => {
+      floor.rooms.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    });
+
+    return heatBuilding;
+  }).filter((building) => building.zoneCount > 0);
+
+  if (buildings.length > 0) return buildings;
+
+  const fallbackBuildings = [];
+  reportZones.forEach((zone, index) => {
+    const buildingName = zone.buildingName || "Building";
+    let building = fallbackBuildings.find((item) => item.name === buildingName);
+    if (!building) {
+      building = { id: buildingName, name: buildingName, floors: [], zoneCount: 0, sampleCount: 0 };
+      fallbackBuildings.push(building);
+    }
+
+    const pathParts = String(zone.zonePath || "")
+      .split("/")
+      .map((part) => part.trim())
+      .filter(Boolean);
+    addHeatZoneToGrid(
+      building,
+      createHeatZoneRecord(
+        {
+          id: zone.zoneId || index,
+          zoneName: pathParts[2] || zone.zonePath || `Zone ${index + 1}`,
+          zonePath: zone.zonePath,
+          buildingName,
+          floorName: pathParts[0] || "Unassigned Floor",
+          roomName: pathParts[1] || pathParts[0] || "Unassigned Room",
+          devices: [],
+        },
+        zone,
+        index
+      )
+    );
+  });
+
+  return fallbackBuildings;
+}
+
 function normalizeSeverity(severity) {
   return String(severity || "default").toLowerCase();
 }
