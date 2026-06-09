@@ -69,6 +69,56 @@ const noSamplesHeatBand = {
 
 const floorplanSlots = ["lobby", "floor-one", "floor-two", "tower-lobby", "tower-floor"];
 
+const architectureRuntimeLayers = [
+  {
+    key: "ui",
+    title: "React/Vite UI",
+    contract: "Operator dashboard, heat map, alarms, schedules, device state",
+  },
+  {
+    key: "api",
+    title: "Node API",
+    contract: "HTTP/JSON, SSE, auth, MySQL queries, BEMS-ai gRPC client",
+  },
+  {
+    key: "mysql",
+    title: "MySQL",
+    contract: "Buildings, zones, devices, telemetry, alarms, schedules, RL policy",
+  },
+  {
+    key: "ai",
+    title: "BEMS-ai Service",
+    contract: "gRPC Optimize, digital twin, grid optimizer, simulation, feedback",
+  },
+  {
+    key: "edge",
+    title: "C++ Edge Core",
+    contract: "BACnet polling, local safety, command enforcement, telemetry publish",
+  },
+  {
+    key: "bacnet",
+    title: "BACnet Devices",
+    contract: "ReadProperty, WriteProperty, schedules, field telemetry",
+  },
+];
+
+const bemsAiContractCards = [
+  ["State", "116", "fixed state dimensions"],
+  ["Action", "12", "normalized control outputs"],
+  ["Zones", "4", "multi-zone HVAC contract"],
+  ["Horizon", "8", "forecast/control steps"],
+];
+
+const architectureEvidenceRows = [
+  ["Telemetry dashboard", "Real-time UI panel"],
+  ["BEMS heat map", "Report heat map"],
+  ["API health", "Node API + SSE status"],
+  ["Digital twin", "Digital twin panel"],
+  ["Alarms/schedules", "Alarm and schedule tables"],
+  ["Schema/ERD", "database/schema.sql"],
+  ["Deployment", "Docker health model"],
+];
+
 function getTemperatureHeatBand(intensity, hasSamples) {
   if (!hasSamples) return noSamplesHeatBand;
   return temperatureHeatBands.find((band) => intensity >= band.minIntensity) || temperatureHeatBands[temperatureHeatBands.length - 1];
@@ -1100,6 +1150,98 @@ function TelemetryFeed({ feed }) {
         ))}
       </div>
     </div>
+  );
+}
+
+function ArchitectureAlignmentPanel({
+  telemetryConnected,
+  alarmConnected,
+  hierarchy,
+  devices,
+  alarms,
+  schedules,
+  buildingOptimization,
+  digitalTwin,
+  reportHeatMap,
+  buildingFootprint,
+  eventStatus,
+  edgeCapabilities,
+  controlStatus,
+}) {
+  const statusByLayer = {
+    ui: "live",
+    api: telemetryConnected || alarmConnected || eventStatus ? "connected" : "recovering",
+    mysql: hierarchy.length > 0 || devices.length > 0 ? "seeded" : "waiting",
+    ai: buildingOptimization ? "optimized" : controlStatus?.running ? "running" : "standby",
+    edge: edgeCapabilities ? "ready" : "available",
+    bacnet: devices.length > 0 ? `${devices.length} points` : "discovery",
+  };
+  const evidenceStatus = {
+    "Telemetry dashboard": telemetryConnected ? "live" : "offline",
+    "BEMS heat map": reportHeatMap?.zones?.length ? `${reportHeatMap.zones.length} zones` : "pending",
+    "API health": eventStatus ? "ready" : telemetryConnected ? "SSE ready" : "recovering",
+    "Digital twin": digitalTwin?.buildings?.length ? `${digitalTwin.buildings.length} buildings` : "pending",
+    "Alarms/schedules": `${alarms.filter((alarm) => alarm.status !== "Cleared").length} alarms / ${schedules.filter((schedule) => schedule.enabled).length} schedules`,
+    "Schema/ERD": "schema.sql",
+    Deployment: edgeCapabilities ? "edge ready" : "Docker model",
+  };
+
+  return (
+    <section className="bems-architecture-panel" aria-label="Deep architecture alignment">
+      <div className="bems-architecture-heading">
+        <div>
+          <div className="bems-console-eyebrow">Deep Architecture Alignment</div>
+          <h2>BMS Runtime Path</h2>
+          <p>Dashboard state follows the BMS and BEMS-ai architecture docs: UI, API, MySQL, AI optimization, edge control, and BACnet field response.</p>
+        </div>
+        <div className="bems-architecture-status">
+          <strong>{buildingFootprint ? `$${buildingFootprint.totals.monthlyCost}` : "cost pending"}</strong>
+          <span>monthly energy model</span>
+        </div>
+      </div>
+
+      <div className="bems-runtime-path">
+        {architectureRuntimeLayers.map((layer, index) => (
+          <article key={layer.key} className="bems-runtime-card">
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <h3>{layer.title}</h3>
+            <p>{layer.contract}</p>
+            <strong>{statusByLayer[layer.key]}</strong>
+          </article>
+        ))}
+      </div>
+
+      <div className="bems-architecture-detail-grid">
+        <article className="bems-architecture-card">
+          <h3>BEMS-ai Contract</h3>
+          <div className="bems-contract-grid">
+            {bemsAiContractCards.map(([label, value, helper]) => (
+              <div key={label}>
+                <span>{label}</span>
+                <strong>{value}</strong>
+                <small>{helper}</small>
+              </div>
+            ))}
+          </div>
+          <p>Runtime modules align to state layout, simulation, digital twin guardrails, power-grid dispatch, and policy inference. Training/export scripts remain outside request paths.</p>
+        </article>
+
+        <article className="bems-architecture-card">
+          <h3>Evidence Map</h3>
+          <div className="bems-evidence-list">
+            {architectureEvidenceRows.map(([label, source]) => (
+              <div key={label}>
+                <span>
+                  <strong>{label}</strong>
+                  <small>{source}</small>
+                </span>
+                <em>{evidenceStatus[label]}</em>
+              </div>
+            ))}
+          </div>
+        </article>
+      </div>
+    </section>
   );
 }
 
@@ -4004,9 +4146,25 @@ export default function App() {
             <div>
               <div className="bems-console-eyebrow">Home Page</div>
               <h2>Dashboard</h2>
-              <p>Unified view for live building health, energy, alarms, AI optimization, schedules, and field device status.</p>
+              <p>Unified BMS view for live building health, MySQL-backed telemetry, BEMS-ai optimization, edge-core commands, BACnet devices, alarms, schedules, and deployment evidence.</p>
             </div>
           </section>
+
+          <ArchitectureAlignmentPanel
+            telemetryConnected={telemetryConnected}
+            alarmConnected={alarmStreamConnected}
+            hierarchy={hierarchy}
+            devices={devices}
+            alarms={alarms}
+            schedules={schedules}
+            buildingOptimization={buildingOptimization}
+            digitalTwin={digitalTwin}
+            reportHeatMap={reportHeatMap}
+            buildingFootprint={buildingFootprint}
+            eventStatus={eventStatus}
+            edgeCapabilities={edgeCapabilities}
+            controlStatus={controlStatus}
+          />
 
           <CampusDashboard
             loginContext={loginContext}
