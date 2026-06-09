@@ -33,6 +33,9 @@ jobs:
       - name: Verify architecture file map
         run: ./scripts/verify_architecture.sh
 
+      - name: Clean checked-in CMake build caches
+        run: rm -rf edge-core/build field-device/build
+
       - name: Configure edge core
         run: cmake -S edge-core -B edge-core/build
 
