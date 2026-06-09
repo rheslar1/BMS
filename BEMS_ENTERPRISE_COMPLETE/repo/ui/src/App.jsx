@@ -53,22 +53,84 @@ const defaultAlarmColors = {
 const alarmSeverityKeys = ["critical", "warning", "info", "default", "cleared"];
 
 const temperatureHeatBands = [
-  { label: "Hot", minIntensity: 0.75, color: "#dc2626", textColor: "white", range: "75-100%" },
-  { label: "Warm", minIntensity: 0.5, color: "#f97316", textColor: "white", range: "50-75%" },
-  { label: "Mild", minIntensity: 0.25, color: "#facc15", textColor: "#0f172a", range: "25-50%" },
-  { label: "Cool", minIntensity: 0, color: "#2563eb", textColor: "white", range: "0-25%" },
+  { key: "hot", label: "Hot", minIntensity: 0.75, color: "#dc2626", textColor: "white", range: "75-100%" },
+  { key: "mid", label: "Mid", minIntensity: 0.5, color: "#f59e0b", textColor: "#0f172a", range: "50-75%" },
+  { key: "normal", label: "Normal", minIntensity: 0.25, color: "#16a34a", textColor: "white", range: "25-50%" },
+  { key: "cold", label: "Cold", minIntensity: 0, color: "#2563eb", textColor: "white", range: "0-25%" },
 ];
 
 const noSamplesHeatBand = {
+  key: "none",
   label: "No samples",
   color: "#f1f5f9",
   textColor: "#475569",
   range: "none",
 };
 
+const floorplanSlots = ["lobby", "floor-one", "floor-two", "tower-lobby", "tower-floor"];
+
 function getTemperatureHeatBand(intensity, hasSamples) {
   if (!hasSamples) return noSamplesHeatBand;
   return temperatureHeatBands.find((band) => intensity >= band.minIntensity) || temperatureHeatBands[temperatureHeatBands.length - 1];
+}
+
+function estimateZoneIntensityFromDevices(zone) {
+  const numericDevices = (zone.devices || []).filter((device) => typeof device.value === "number");
+  const temperatureDevice = numericDevices.find((device) => /temp|air/i.test(`${device.name} ${device.type} ${device.objectType || ""}`));
+
+  if (temperatureDevice) {
+    const temperature = Number(temperatureDevice.value);
+    if (temperature >= 24) return 0.9;
+    if (temperature >= 22.5) return 0.62;
+    if (temperature >= 20) return 0.36;
+    return 0.12;
+  }
+
+  if (numericDevices.length === 0) return 0;
+  const average = numericDevices.reduce((sum, device) => sum + Number(device.value || 0), 0) / numericDevices.length;
+  return Math.max(0, Math.min(1, average / 100));
+}
+
+function buildDashboardHeatZones(hierarchy, heatMap) {
+  const reportZones = heatMap?.zones || [];
+  const reportByZoneId = new Map(reportZones.map((zone) => [String(zone.zoneId), zone]));
+  const hierarchyZones = flattenZones(hierarchy || []);
+
+  if (hierarchyZones.length === 0) {
+    return reportZones.map((zone, index) => {
+      const hasSamples = zone.sampleCount > 0;
+      const heatBand = getTemperatureHeatBand(Number(zone.intensity || 0), hasSamples);
+      return {
+        id: zone.zoneId || index,
+        name: zone.zonePath || `Zone ${index + 1}`,
+        buildingName: zone.buildingName || "Building",
+        value: zone.averageValue ?? "-",
+        sampleCount: zone.sampleCount ?? 0,
+        heatBand,
+        slot: floorplanSlots[index % floorplanSlots.length],
+        devices: [],
+      };
+    });
+  }
+
+  return hierarchyZones.map((zone, index) => {
+    const reportZone = reportByZoneId.get(String(zone.id));
+    const hasSamples = reportZone ? reportZone.sampleCount > 0 : (zone.devices || []).some((device) => typeof device.value === "number");
+    const intensity = reportZone ? Number(reportZone.intensity || 0) : estimateZoneIntensityFromDevices(zone);
+    const heatBand = getTemperatureHeatBand(intensity, hasSamples);
+    const numericDevice = (zone.devices || []).find((device) => typeof device.value === "number");
+
+    return {
+      id: zone.id,
+      name: formatZonePath(zone),
+      buildingName: zone.buildingName,
+      value: reportZone?.averageValue ?? numericDevice?.value ?? "-",
+      sampleCount: reportZone?.sampleCount ?? (numericDevice ? 1 : 0),
+      heatBand,
+      slot: floorplanSlots[index % floorplanSlots.length],
+      devices: zone.devices || [],
+    };
+  });
 }
 
 function normalizeSeverity(severity) {
