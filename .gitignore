@@ -1,0 +1,8 @@
+# Generated CMake build trees must stay out of the repo because
+# CMakeCache.txt stores absolute source/build paths.
+BEMS_ENTERPRISE_COMPLETE/repo/edge-core/build/
+BEMS_ENTERPRISE_COMPLETE/repo/field-device/build/
+
+# Python runtime artifacts.
+BEMS_ENTERPRISE_COMPLETE/repo/**/__pycache__/
+BEMS_ENTERPRISE_COMPLETE/repo/**/*.py[cod]
