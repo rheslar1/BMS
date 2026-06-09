@@ -1,0 +1,162 @@
+name: BEMS CI
+
+on:
+  push:
+    branches:
+      - main
+      - bems
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install C++ edge dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            clang-tidy \
+            cmake \
+            cppcheck \
+            libgrpc++-dev \
+            libprotobuf-dev \
+            pkg-config \
+            protobuf-compiler \
+            protobuf-compiler-grpc
+
+      - name: Verify architecture file map
+        run: ./scripts/verify_architecture.sh
+
+      - name: Configure edge core
+        run: cmake -S edge-core -B edge-core/build
+
+      - name: Build edge core
+        run: cmake --build edge-core/build
+
+      - name: Test C++ writeback module
+        run: ctest --test-dir edge-core/build -R edge-core-tests --output-on-failure
+
+      - name: Test C++ BACnet simulator module
+        run: ctest --test-dir edge-core/build -R edge-core-bacnet-simulator-tests --output-on-failure
+
+      - name: Test C++ fieldbus modules
+        run: ctest --test-dir edge-core/build -R edge-core-fieldbus-tests --output-on-failure
+
+      - name: Test C++ energy AI module
+        run: ctest --test-dir edge-core/build -R edge-core-energy-ai-tests --output-on-failure
+
+      - name: Test C++ discovery module
+        run: ctest --test-dir edge-core/build -R edge-core-discovery-tests --output-on-failure
+
+      - name: Test all C++ edge modules
+        run: ctest --test-dir edge-core/build --output-on-failure
+
+      - name: Configure edge core ASan/UBSan
+        run: cmake --preset asan-ubsan
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/edge-core
+
+      - name: Build edge core ASan/UBSan
+        run: cmake --build --preset asan-ubsan
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/edge-core
+
+      - name: Test edge core ASan/UBSan
+        run: ctest --preset asan-ubsan
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/edge-core
+
+      - name: Configure edge core ThreadSanitizer
+        run: cmake --preset tsan
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/edge-core
+
+      - name: Build threaded tests with ThreadSanitizer
+        run: cmake --build --preset tsan --target edge-core-service-tests edge-core-bounded-queue-tests
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/edge-core
+
+      - name: Run ThreadSanitizer threaded tests
+        run: ctest --preset tsan-threaded
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/edge-core
+
+      - name: Run clang-tidy on edge core
+        run: |
+          cmake --preset static-analysis
+          cmake --build --preset static-analysis --target edge-core-service-tests edge-core-bounded-queue-tests
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/edge-core
+
+      - name: Run cppcheck on edge core
+        run: |
+          cppcheck --enable=warning,style,performance,portability \
+            --language=c++ \
+            --std=c++17 \
+            --inline-suppr \
+            --suppressions-list=cppcheck-suppressions.txt \
+            --error-exitcode=1 \
+            --template=gcc \
+            src tests
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/edge-core
+
+      - name: Configure C++ field device firmware
+        run: cmake -S field-device -B field-device/build
+
+      - name: Build C++ field device firmware
+        run: cmake --build field-device/build
+
+      - name: Test C++ field device firmware
+        run: ctest --test-dir field-device/build --output-on-failure
+
+      - name: Install Node API dependencies
+        run: npm ci
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/node-api
+
+      - name: Check Node API syntax
+        run: |
+          node --check server.js
+          node --check auth.js
+          node --check aiClient.js
+          node --check edgeClient.js
+          node --check migrations/runMigrations.js
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/node-api
+
+      - name: Test Node API
+        run: npm test
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/node-api
+
+      - name: Audit Node API dependencies
+        run: npm audit --audit-level=high
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/node-api
+
+      - name: Install Python AI requirements
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements.txt
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/ai-service
+
+      - name: Check Python AI service syntax
+        run: python3 -m py_compile app.py generated/ai_service_pb2.py generated/ai_service_pb2_grpc.py
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/ai-service
+
+      - name: Test Python AI service
+        run: python3 -m unittest test_app.py
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/ai-service
+
+      - name: Install UI dependencies
+        run: npm ci
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/ui
+
+      - name: Build UI
+        run: npm run build
+        working-directory: BEMS_ENTERPRISE_COMPLETE/repo/ui
