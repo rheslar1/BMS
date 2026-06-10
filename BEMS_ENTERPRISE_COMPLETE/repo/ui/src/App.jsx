@@ -2,6 +2,19 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const apiBase = import.meta.env.VITE_API_URL ?? "";
+const portfolioContactUrl = "https://rheslar1.github.io/BMS/portfolio?deploy=67770cb#contact";
+const publicAssetUrl = (path) => {
+  const base = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+  return `${base}/${String(path).replace(/^\//, "")}`;
+};
+
+const normalizePublicPath = (pathname) => {
+  const base = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+  if (base && pathname.startsWith(base)) {
+    return pathname.slice(base.length) || "/";
+  }
+  return pathname;
+};
 
 const headerStyle = {
   padding: "12px 10px",
@@ -116,6 +129,553 @@ const architectureEvidenceRows = [
   ["Schema/ERD", "database/schema.sql"],
   ["Deployment", "Docker health model"],
 ];
+
+const portfolioStats = [
+  ["18+", "embedded deliverables"],
+  ["6", "field protocols"],
+  ["24/7", "edge runtime mindset"],
+  ["C/C++", "firmware core"],
+];
+
+const portfolioProjects = [
+  {
+    title: "BEMS Edge AI Gateway",
+    category: "Industrial controls",
+    summary: "C++ edge runtime coordinating BACnet polling, local safety rules, RabbitMQ command transport, and cloud-ready telemetry.",
+    stack: ["C++", "BACnet/IP", "RabbitMQ", "Docker", "i.MX93"],
+    result: "Resilient edge control with simulator-safe fallbacks and observable health checks.",
+  },
+  {
+    title: "nRF52840 BACnet Field Node",
+    category: "Bare-metal device",
+    summary: "Battery-aware field device profile with persistent setpoint storage, commissioning evidence, and BACnet object mapping.",
+    stack: ["nRF52840", "C", "EEPROM", "BACnet", "BLE-ready"],
+    result: "Provisioning path for wireless and wired building devices with retained configuration.",
+  },
+  {
+    title: "Production Flash and Test Rig",
+    category: "Manufacturing readiness",
+    summary: "Repeatable board flashing, update-cycle validation, and long-run soak checks for deployment confidence.",
+    stack: ["SWUpdate", "Yocto", "Shell", "QA logs", "Hardware lab"],
+    result: "Clear pass/fail evidence for firmware updates, board bring-up, and field acceptance.",
+  },
+  {
+    title: "Zephyr RTOS IoT Sensor Node",
+    category: "Senior repo example",
+    summary: "Edge sensor node with Zephyr threads, Wi-Fi/BLE provisioning, power-mode profiling, encrypted telemetry, and signed OTA firmware updates.",
+    stack: ["Zephyr RTOS", "BLE", "Wi-Fi", "MCUboot", "TLS", "Power profiling"],
+    result: "Repo proof: real concurrency, secure update flow, low-power design, and production-grade device lifecycle thinking.",
+  },
+  {
+    title: "Closed-Loop Motor Control Platform",
+    category: "Senior repo example",
+    summary: "PID or FOC motor driver with encoder feedback, IMU sensor fusion, current limiting, and deterministic control loops on STM32 or ESP32.",
+    stack: ["STM32", "FOC/PID", "IMU", "Encoders", "PWM", "Control theory"],
+    result: "Repo proof: math-heavy firmware, timing discipline, safety bounds, calibration tooling, and hardware-in-the-loop validation.",
+  },
+  {
+    title: "Secure Bare-Metal Bootloader",
+    category: "Senior repo example",
+    summary: "Custom bootloader with flash memory partitioning, rollback-safe image slots, cryptographic signature verification, and update diagnostics.",
+    stack: ["Bare metal C", "Linker scripts", "Flash layout", "ECDSA", "SHA-256", "UART/USB DFU"],
+    result: "Repo proof: deep hardware/software integration, secure boot fundamentals, memory maps, and recoverable field updates.",
+  },
+  {
+    title: "Custom OTA Update System",
+    category: "Senior repo example",
+    summary: "Secure dual-partition firmware update flow for ESP32 or STM32 with signed image verification, staged rollouts, and automatic fallback to the last known-good slot.",
+    stack: ["ESP32/STM32", "Dual partition", "MCUboot", "ECDSA", "TLS", "Rollback logic"],
+    result: "Repo proof: production deployment pipelines, secure update handling, flash layout discipline, and field recovery behavior.",
+  },
+  {
+    title: "Bare-Metal RTOS Scheduling",
+    category: "Senior repo example",
+    summary: "Multi-threaded FreeRTOS or Zephyr application with queues, mutexes, semaphores, interrupt handoff, and documented handling of resource contention and priority inversion.",
+    stack: ["FreeRTOS", "Zephyr", "IPC", "Mutexes", "Semaphores", "Priority inheritance"],
+    result: "Repo proof: real concurrency, deterministic task design, shared-resource safety, and explainable scheduler tradeoffs.",
+  },
+  {
+    title: "Embedded Linux / Yocto Image",
+    category: "Senior repo example",
+    summary: "Custom Linux image for Raspberry Pi, BeagleBone, or i.MX-class hardware with Yocto recipes, kernel configuration, service units, and a streamlined root filesystem.",
+    stack: ["Yocto", "BitBake", "Kernel config", "Systemd", "Device tree", "Rootfs"],
+    result: "Repo proof: board-support fluency, package ownership, appliance-style Linux builds, and reproducible edge deployment.",
+  },
+  {
+    title: "TinyML Sensor Anomaly Detector",
+    category: "Senior repo example",
+    summary: "Quantized wake-word or sensor anomaly model running on an ARM Cortex-M core with measured RAM, flash, latency, and power budget constraints.",
+    stack: ["Cortex-M", "TensorFlow Lite Micro", "Quantization", "CMSIS-NN", "Ring buffers", "Edge inference"],
+    result: "Repo proof: embedded ML optimization, memory budgeting, fixed-point inference, and useful intelligence at the device edge.",
+  },
+  {
+    title: "CAN Bus ECU Simulation",
+    category: "Senior repo example",
+    summary: "Automotive or industrial CAN network simulator with multiple communicating nodes, arbitration IDs, filters, periodic frames, diagnostics, and bus error handling.",
+    stack: ["CAN", "SocketCAN", "STM32", "DBC", "Filters", "Fault injection"],
+    result: "Repo proof: fieldbus fundamentals, real-time message design, diagnostic thinking, and resilient network behavior.",
+  },
+  {
+    title: "Low-Power Temperature Datalogger",
+    category: "Senior repo example",
+    summary: "Battery-powered outdoor datalogger that wakes on schedule, samples temperature, writes compact records, sleeps aggressively, and documents every runtime-improvement experiment.",
+    stack: ["Low power MCU", "I2C sensor", "RTC wake", "Deep sleep", "SD/Flash logging", "Battery profiling"],
+    result: "Repo proof: measured power reduction, long-duration testing, hardware tradeoff documentation, and practical battery-life engineering.",
+  },
+  {
+    title: "SPI/I2C/UART MCU Bootloader",
+    category: "Senior repo example",
+    summary: "Bootloader that reprograms an MCU over UART, SPI, or I2C with packet framing, CRC checks, flash erase/write control, image validation, and a protected recovery mode.",
+    stack: ["Bare metal C", "UART", "SPI", "I2C", "CRC32", "Flash driver"],
+    result: "Repo proof: board-level protocol handling, robust firmware transfer, boot safety, and hardware/software integration under tight constraints.",
+  },
+  {
+    title: "Digi ConnectCore i.MX93 Peripheral Driver",
+    category: "Senior repo example",
+    summary: "Hardware peripheral driver for the Digi ConnectCore i.MX93 EVK, covering an on-chip SPI or PWM block plus an application layer and a test boundary between driver and app code.",
+    stack: ["i.MX93", "Digi ConnectCore", "SPI/PWM", "Device tree", "Linux driver", "Unit tests"],
+    result: "Repo proof: board-specific bring-up, clean driver/application separation, register-level reasoning, and testable hardware abstractions.",
+  },
+  {
+    title: "DRV8801 Brushed DC Motor Controller",
+    category: "Senior repo example",
+    summary: "Single-phase brushed DC motor control app using a DRV8801 driver, encoder feedback, and a UI that switches between constant velocity and constant position modes.",
+    stack: ["DRV8801", "PWM", "Quadrature encoder", "PID", "Velocity mode", "Position mode"],
+    result: "Repo proof: closed-loop control, mode switching, tachometer and angular-offset display, tuning workflow, and safety-limited actuator control.",
+  },
+  {
+    title: "Medical Wearable Power Manager",
+    category: "Senior repo example",
+    summary: "RTOS power-management thread for a battery wearable that schedules sensor reads, drops the MCU into the deepest valid sleep mode, and uses DMA to collect samples without waking the main CPU.",
+    stack: ["RTOS", "Sleep states", "DMA", "Sensor sampling", "Battery telemetry", "Wake sources"],
+    result: "Repo proof: days-to-weeks runtime thinking, measurable sleep-current reduction, autonomous data capture, and medical-device-grade power discipline.",
+  },
+  {
+    title: "Connected IoT Device",
+    category: "Standout integration project",
+    summary: "RTOS-based sensor node with MQTT cloud integration, signed OTA updates, low-power operating modes, and TLS-backed device identity for secure telemetry.",
+    stack: ["FreeRTOS/Zephyr", "MQTT", "TLS", "OTA", "Low power modes", "Device identity"],
+    result: "Repo proof: end-to-end connected-device architecture, secure cloud messaging, field-update readiness, and measured battery-aware behavior.",
+  },
+  {
+    title: "Bare-Metal Custom Board Bring-Up",
+    category: "Standout integration project",
+    summary: "Custom PCB bring-up path with low-level device drivers, board diagnostics, register checks, and a UART or USB CDC CLI/REPL for interactive hardware validation.",
+    stack: ["Custom PCB", "Bare metal C", "Device drivers", "UART CLI", "USB CDC", "Board diagnostics"],
+    result: "Repo proof: schematic-to-firmware ownership, peripheral validation, practical debug tooling, and confidence with first-board uncertainty.",
+  },
+  {
+    title: "Edge AI / TinyML Microcontroller",
+    category: "Standout integration project",
+    summary: "TensorFlow Lite for Microcontrollers model deployed on an MCU with quantization, memory profiling, inference timing, and optimization notes for tight RAM/flash budgets.",
+    stack: ["TFLite Micro", "Cortex-M", "Quantization", "Memory profiling", "CMSIS-NN", "Edge inference"],
+    result: "Repo proof: model deployment under embedded constraints, measurable optimization work, and useful on-device intelligence without cloud dependence.",
+  },
+];
+
+const projectImplementationBlueprints = {
+  "BEMS Edge AI Gateway": {
+    status: "Implemented in repo",
+    target: "Linux edge appliance on i.MX93-class hardware",
+    artifacts: ["edge-core runtime", "BACnet polling", "RabbitMQ command path", "Docker deployment"],
+    verification: ["C++ tests", "Docker health checks", "simulator-safe fallback paths"],
+  },
+  "nRF52840 BACnet Field Node": {
+    status: "Implemented in repo",
+    target: "nRF52840-style field device profile",
+    artifacts: ["field-device firmware model", "persistent setpoints", "BACnet object mapping", "device resident schedules"],
+    verification: ["field-device simulator tests", "persistent storage checks", "BACnet object evidence"],
+  },
+  "Production Flash and Test Rig": {
+    status: "Implemented in repo",
+    target: "Production board flashing and update-cycle validation",
+    artifacts: ["production board runbook", "SWUpdate checks", "hardware validation script", "rollback drill plan"],
+    verification: ["preflight script", "update-cycle evidence plan", "commissioning checklist"],
+  },
+  "Zephyr RTOS IoT Sensor Node": {
+    status: "Implementation blueprint",
+    target: "Zephyr RTOS Wi-Fi/BLE sensor node",
+    artifacts: ["RTOS task model", "TLS MQTT telemetry", "signed OTA path", "low-power measurement plan"],
+    verification: ["thread tests", "power profiling log", "OTA rollback test", "cloud publish smoke test"],
+  },
+  "Closed-Loop Motor Control Platform": {
+    status: "Implementation blueprint",
+    target: "STM32 or ESP32 motor-control board",
+    artifacts: ["PID/FOC control loop", "encoder and IMU sampling", "PWM driver", "calibration UI"],
+    verification: ["step response plots", "current-limit checks", "hardware-in-loop test notes"],
+  },
+  "Secure Bare-Metal Bootloader": {
+    status: "Implementation blueprint",
+    target: "Bare-metal MCU with protected flash slots",
+    artifacts: ["linker map", "image slots", "ECDSA verification", "rollback-safe boot path"],
+    verification: ["signature rejection test", "power-loss recovery test", "boot log transcript"],
+  },
+  "Custom OTA Update System": {
+    status: "Implementation blueprint",
+    target: "ESP32 or STM32 dual-partition firmware update",
+    artifacts: ["dual image slots", "signed manifest", "TLS update client", "known-good fallback"],
+    verification: ["staged update test", "bad signature test", "rollback drill"],
+  },
+  "Bare-Metal RTOS Scheduling": {
+    status: "Implementation blueprint",
+    target: "FreeRTOS or Zephyr multi-threaded firmware",
+    artifacts: ["task graph", "queues", "mutexes", "semaphores", "priority inversion notes"],
+    verification: ["IPC tests", "scheduler trace", "contention and latency report"],
+  },
+  "Embedded Linux / Yocto Image": {
+    status: "Implemented in repo",
+    target: "Yocto edge image for BEMS appliance",
+    artifacts: ["Yocto layer", "image recipe", "edge-core recipe", "SWUpdate packaging"],
+    verification: ["BitBake recipe review", "board flash runbook", "package update test plan"],
+  },
+  "TinyML Sensor Anomaly Detector": {
+    status: "Implementation blueprint",
+    target: "ARM Cortex-M TinyML inference target",
+    artifacts: ["quantized model", "TFLite Micro runner", "ring-buffer feature extraction", "memory budget"],
+    verification: ["RAM/flash report", "latency benchmark", "false-positive sample set"],
+  },
+  "CAN Bus ECU Simulation": {
+    status: "Implementation blueprint",
+    target: "SocketCAN or STM32 multi-node bus simulation",
+    artifacts: ["node simulator", "DBC/message map", "arbitration scenarios", "fault injection"],
+    verification: ["bus error tests", "filter tests", "diagnostic frame captures"],
+  },
+  "Low-Power Temperature Datalogger": {
+    status: "Implementation blueprint",
+    target: "Battery-powered outdoor temperature logger",
+    artifacts: ["RTC wake scheduler", "deep sleep profile", "I2C temperature driver", "compact log format"],
+    verification: ["sleep-current table", "battery-runtime estimate", "temperature log export"],
+  },
+  "SPI/I2C/UART MCU Bootloader": {
+    status: "Implementation blueprint",
+    target: "MCU reprogramming over UART, SPI, or I2C",
+    artifacts: ["packet framing", "CRC32 checks", "flash erase/write driver", "protected recovery mode"],
+    verification: ["corrupt packet test", "transport swap test", "flash validation log"],
+  },
+  "Digi ConnectCore i.MX93 Peripheral Driver": {
+    status: "Implementation blueprint",
+    target: "Digi ConnectCore i.MX93 EVK peripheral stack",
+    artifacts: ["SPI/PWM driver boundary", "device tree binding", "application layer", "driver/app test seam"],
+    verification: ["unit tests", "loopback test", "scope capture checklist"],
+  },
+  "DRV8801 Brushed DC Motor Controller": {
+    status: "Implementation blueprint",
+    target: "DRV8801 brushed DC motor control board",
+    artifacts: ["PWM direction driver", "encoder tachometer", "PID controller", "CV/CP user interface"],
+    verification: ["velocity tracking plot", "position offset display", "mode switch safety test"],
+  },
+  "Medical Wearable Power Manager": {
+    status: "Implementation blueprint",
+    target: "Medical wearable MCU with RTOS power manager",
+    artifacts: ["sleep-state owner thread", "DMA sensor capture", "wake source table", "battery telemetry"],
+    verification: ["sleep residency report", "DMA capture test", "multi-day runtime estimate"],
+  },
+  "Connected IoT Device": {
+    status: "Implementation blueprint",
+    target: "RTOS sensor node with secure MQTT cloud connection",
+    artifacts: ["MQTT client", "TLS identity", "OTA update flow", "low-power state machine"],
+    verification: ["cloud publish test", "TLS cert rotation notes", "battery profile", "OTA smoke test"],
+  },
+  "Bare-Metal Custom Board Bring-Up": {
+    status: "Implementation blueprint",
+    target: "Custom PCB bring-up firmware",
+    artifacts: ["board support package", "low-level drivers", "UART/USB CDC CLI", "register diagnostics"],
+    verification: ["first-boot checklist", "REPL transcript", "peripheral smoke tests"],
+  },
+  "Edge AI / TinyML Microcontroller": {
+    status: "Implementation blueprint",
+    target: "Microcontroller edge inference demo",
+    artifacts: ["quantized model", "TFLite Micro integration", "memory profiling", "inference timing hooks"],
+    verification: ["flash/RAM budget", "latency test", "accuracy comparison"],
+  },
+};
+
+const implementationStatusColors = {
+  "Implemented in repo": "#166534",
+  "Implementation blueprint": "#1d4ed8",
+};
+
+const portfolioCapabilities = [
+  ["Firmware", "Bare-metal C/C++, RTOS-style scheduling, peripheral drivers, persistent configuration, and defensive fault handling."],
+  ["Protocols", "BACnet/IP, Modbus RTU, CAN, MQTT, RabbitMQ, SSE, and structured telemetry contracts for mixed building networks."],
+  ["Edge Systems", "Linux appliance packaging, Docker deployment, health checks, local command enforcement, and cloud bridge readiness."],
+  ["Validation", "Commissioning checklists, trend logging, production flashing, OTA evidence, soak testing, and operator-facing diagnostics."],
+];
+
+const portfolioToolchains = [
+  {
+    title: "Platform-Specific IDEs",
+    detail: "ARM Cortex-M development using Keil MDK, IAR Embedded Workbench, and STM32CubeIDE for startup code, peripheral configuration, debug sessions, and release builds.",
+    tools: ["Keil MDK", "IAR Embedded Workbench", "STM32CubeIDE", "ARM Cortex-M"],
+  },
+  {
+    title: "Versatile Development Environments",
+    detail: "VS Code configured for embedded C/C++, CMake, cross-compilers, debug launch profiles, and Eclipse CDT for larger firmware and Linux-adjacent projects.",
+    tools: ["VS Code", "C/C++ extension", "CMake tools", "Eclipse CDT"],
+  },
+  {
+    title: "Firmware CI/CD and Analysis",
+    detail: "Automated firmware builds, unit tests, static analysis, dynamic analysis, artifact packaging, and repeatable release checks for embedded repositories.",
+    tools: ["CI/CD pipelines", "Coverity", "Valgrind", "Sanitizers"],
+  },
+  {
+    title: "In-Circuit Debugging",
+    detail: "Hardware probe workflows for breakpoints, register inspection, SWD/JTAG bring-up, flash programming, fault capture, and board-level diagnosis.",
+    tools: ["J-Link", "ST-LINK", "SWD/JTAG", "GDB/OpenOCD"],
+  },
+];
+
+const portfolioTimeline = [
+  ["Discover", "Map hardware interfaces, device objects, failure modes, and deployment constraints before code lands."],
+  ["Prototype", "Bring up firmware, simulate field points, and expose just enough telemetry to prove the control loop."],
+  ["Harden", "Add watchdog paths, command safety, persistent storage, observability, and test fixtures."],
+  ["Ship", "Package releases, document acceptance evidence, and keep the operator workflow practical."],
+];
+
+function EmbeddedSystemsPortfolio() {
+  return (
+    <div className="embedded-portfolio">
+      <header className="embedded-portfolio-nav">
+        <a className="embedded-portfolio-brand" href="#top">Embedded Systems Portfolio</a>
+        <nav aria-label="Portfolio sections">
+          <a href="#work">Work</a>
+          <a href="#skills">Skills</a>
+          <a href="#process">Process</a>
+          <a href="#contact">Contact</a>
+        </nav>
+      </header>
+
+      <main id="top">
+        <section
+          className="embedded-hero"
+          aria-label="Embedded systems engineer portfolio"
+          style={{ "--embedded-hero-image": `url(${publicAssetUrl("embedded-workbench.png")})` }}
+        >
+          <div className="embedded-hero-content">
+            <div className="embedded-profile">
+              <img src={publicAssetUrl("portfolio-profile.jpg")} alt="Profile photo" />
+              <div>
+                <strong>Embedded Systems Engineer</strong>
+                <span>Firmware, controls, and edge systems</span>
+              </div>
+            </div>
+            <p className="embedded-eyebrow">Firmware | Controls | Edge AI</p>
+            <h1>Embedded Systems Engineer Portfolio</h1>
+            <p className="embedded-hero-copy">
+              Low-level firmware, fieldbus integration, and edge control systems for smart buildings, industrial devices, and production-ready connected hardware.
+            </p>
+            <div className="embedded-hero-actions">
+              <a className="embedded-button embedded-button-primary" href="#work">View Projects</a>
+              <a className="embedded-button embedded-button-secondary" href="#contact">Start a Conversation</a>
+            </div>
+            <div className="embedded-hero-tags" aria-label="Core specialties">
+              {["Embedded C/C++", "BACnet", "RTOS logic", "Yocto", "Device commissioning"].map((tag) => (
+                <span key={tag}>{tag}</span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="embedded-summary" aria-label="Portfolio highlights">
+          {portfolioStats.map(([value, label]) => (
+            <div key={label} className="embedded-stat">
+              <strong>{value}</strong>
+              <span>{label}</span>
+            </div>
+          ))}
+        </section>
+
+        <section className="embedded-section embedded-intro" aria-labelledby="embedded-intro-title">
+          <div>
+            <p className="embedded-eyebrow">Portfolio Proof</p>
+            <h2 id="embedded-intro-title">Hardware work made visible</h2>
+          </div>
+          <p>
+            Embedded work often hides inside boards, traces, logs, and deployment scripts. This portfolio turns those details into clear evidence: what was built, what constraints mattered, how it was tested, and how it behaves in the field.
+          </p>
+        </section>
+
+        <section className="embedded-section" id="work" aria-labelledby="embedded-work-title">
+          <div className="embedded-section-heading">
+            <p className="embedded-eyebrow">Repo Example Work</p>
+            <h2 id="embedded-work-title">Senior-level proof projects</h2>
+            <p>These examples avoid tutorial-level demos and instead show the complexity recruiters and hardware teams expect: RTOS architecture, secure OTA, control loops, sensor fusion, bootloaders, and field-update safety.</p>
+          </div>
+          <div className="embedded-project-grid">
+            {portfolioProjects.map((project, index) => (
+              <article className="embedded-project-card" key={project.title}>
+                <div className={`embedded-project-visual embedded-project-visual-${index + 1}`} aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <div className="embedded-project-body">
+                  <p className="embedded-project-category">{project.category}</p>
+                  <h3>{project.title}</h3>
+                  <p>{project.summary}</p>
+                  <div className="embedded-chip-row">
+                    {project.stack.map((item) => <span key={item}>{item}</span>)}
+                  </div>
+                  <strong>{project.result}</strong>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="embedded-section embedded-capability-section" id="skills" aria-labelledby="embedded-skills-title">
+          <div className="embedded-section-heading">
+            <p className="embedded-eyebrow">Stack Depth</p>
+            <h2 id="embedded-skills-title">From peripheral pins to operator screens</h2>
+          </div>
+          <div className="embedded-capability-grid">
+            {portfolioCapabilities.map(([title, detail]) => (
+              <article className="embedded-capability-card" key={title}>
+                <h3>{title}</h3>
+                <p>{detail}</p>
+              </article>
+            ))}
+          </div>
+          <div className="embedded-toolchain-panel" aria-labelledby="embedded-toolchain-title">
+            <div className="embedded-toolchain-heading">
+              <p className="embedded-eyebrow">Key Skills to Highlight</p>
+              <h3 id="embedded-toolchain-title">Development environments and debug toolchains</h3>
+              <p>Industry-standard IDEs, build systems, analysis tools, and hardware probes used to move firmware from editor to target board with repeatable evidence.</p>
+            </div>
+            <div className="embedded-toolchain-grid">
+              {portfolioToolchains.map((group) => (
+                <article className="embedded-toolchain-card" key={group.title}>
+                  <h4>{group.title}</h4>
+                  <p>{group.detail}</p>
+                  <div className="embedded-tool-list">
+                    {group.tools.map((tool) => <span key={tool}>{tool}</span>)}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="embedded-section embedded-proof" aria-labelledby="embedded-proof-title">
+          <div>
+            <p className="embedded-eyebrow">Resume vs Portfolio</p>
+            <h2 id="embedded-proof-title">Show the engineering, not only the title</h2>
+          </div>
+          <div className="embedded-proof-grid">
+            <div>
+              <h3>Resume</h3>
+              <p>Lists tools, roles, and project names. Useful for scanning, but thin on implementation evidence.</p>
+            </div>
+            <div>
+              <h3>Portfolio</h3>
+              <p>Shows architecture decisions, board bring-up notes, failure handling, test evidence, and measurable results.</p>
+            </div>
+          </div>
+        </section>
+
+        <section className="embedded-section" id="process" aria-labelledby="embedded-process-title">
+          <div className="embedded-section-heading">
+            <p className="embedded-eyebrow">Workflow</p>
+            <h2 id="embedded-process-title">A practical path from lab bench to deployment</h2>
+          </div>
+          <div className="embedded-timeline">
+            {portfolioTimeline.map(([title, detail], index) => (
+              <article key={title}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <h3>{title}</h3>
+                <p>{detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="embedded-contact" id="contact" aria-label="Contact">
+          <div>
+            <p className="embedded-eyebrow">Available for embedded systems work</p>
+            <h2>Need firmware, device integration, or edge-control delivery?</h2>
+            <p>Bring the board, protocol, or deployment target. I will help turn it into a testable, observable, field-ready system.</p>
+          </div>
+          <a className="embedded-button embedded-button-primary" href="mailto:hello@example.com">hello@example.com</a>
+        </section>
+      </main>
+    </div>
+  );
+}
+
+function EmbeddedProjectsDashboard() {
+  const implementedCount = portfolioProjects.filter((project) => projectImplementationBlueprints[project.title]?.status === "Implemented in repo").length;
+  const blueprintCount = portfolioProjects.length - implementedCount;
+  const projectMetrics = [
+    ["Portfolio Projects", portfolioProjects.length],
+    ["Repo-backed", implementedCount],
+    ["Blueprinted", blueprintCount],
+    ["Evidence Tracks", portfolioProjects.length],
+  ];
+
+  return (
+    <section className="bems-project-dashboard" aria-labelledby="embedded-project-dashboard-title">
+      <div className="bems-project-hero">
+        <div>
+          <div className="bems-console-eyebrow">Project Dashboard</div>
+          <h2 id="embedded-project-dashboard-title">Embedded portfolio implementation tracks</h2>
+          <p>
+            The public portfolio projects are represented here as actionable engineering tracks with target hardware, repo artifacts, and verification evidence.
+          </p>
+        </div>
+        <a className="bems-home-link" href={portfolioContactUrl} target="_blank" rel="noreferrer">
+          Portfolio Contact
+        </a>
+      </div>
+
+      <div className="bems-project-metrics" aria-label="Embedded project implementation summary">
+        {projectMetrics.map(([label, value]) => (
+          <div key={label} className="bems-project-metric">
+            <strong>{value}</strong>
+            <span>{label}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="bems-project-grid">
+        {portfolioProjects.map((project) => {
+          const implementation = projectImplementationBlueprints[project.title];
+          const statusColor = implementationStatusColors[implementation.status] || "#334155";
+          return (
+            <article className="bems-project-card" key={project.title}>
+              <div className="bems-project-card-head">
+                <span className="bems-project-status" style={{ "--project-status-color": statusColor }}>{implementation.status}</span>
+                <small>{project.category}</small>
+              </div>
+              <h3>{project.title}</h3>
+              <p>{project.summary}</p>
+              <div className="bems-project-chip-row">
+                {project.stack.map((item) => <span key={item}>{item}</span>)}
+              </div>
+              <div className="bems-project-detail">
+                <strong>Target</strong>
+                <span>{implementation.target}</span>
+              </div>
+              <div className="bems-project-list-grid">
+                <div>
+                  <strong>Artifacts</strong>
+                  <ul>
+                    {implementation.artifacts.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </div>
+                <div>
+                  <strong>Verification</strong>
+                  <ul>
+                    {implementation.verification.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
 function getTemperatureHeatBand(intensity, hasSamples) {
   if (!hasSamples) return noSamplesHeatBand;
@@ -591,6 +1151,276 @@ function WeeklyTimelineEditor({ schedules }) {
         <span><strong style={{ color: "#7c3aed" }}>Device</strong> override</span>
       </div>
     </div>
+  );
+}
+
+function SchedulesPage({
+  schedules,
+  holidaySchedules,
+  specialEvents,
+  buildings,
+  zones,
+  devices,
+  scheduleForm,
+  setScheduleForm,
+  onCreateSchedule,
+  onToggleSchedule,
+  onDisableHolidaySchedule,
+  onDisableSpecialEvent,
+  saving,
+}) {
+  const enabledSchedules = schedules.filter((schedule) => schedule.enabled);
+  const disabledSchedules = schedules.length - enabledSchedules.length;
+  const enabledHolidays = holidaySchedules.filter((holiday) => holiday.enabled).length;
+  const enabledEvents = specialEvents.filter((eventItem) => eventItem.enabled).length;
+  const fieldStyle = { color: "#334155", display: "flex", flexDirection: "column", gap: "6px" };
+  const selectStyle = { ...inputStyle, backgroundColor: "white" };
+
+  const metrics = [
+    ["Enabled Schedules", enabledSchedules.length],
+    ["Disabled Schedules", disabledSchedules],
+    ["Holiday Overrides", enabledHolidays],
+    ["Special Events", enabledEvents],
+  ];
+
+  return (
+    <section aria-label="Schedules page" style={{ display: "grid", gap: "18px" }}>
+      <section className="bems-home-hero" aria-label="Schedules">
+        <div>
+          <div className="bems-console-eyebrow">Schedules Page</div>
+          <h2>Schedules</h2>
+          <p>Weekly schedules, holiday overrides, special events, and device-level control windows.</p>
+        </div>
+      </section>
+
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "14px" }}>
+        {metrics.map(([label, value]) => (
+          <div key={label} style={{ ...panelStyle, padding: "16px" }}>
+            <div style={{ color: "#64748b", fontSize: "13px" }}>{label}</div>
+            <strong style={{ color: "#1f355e", fontSize: "24px" }}>{value}</strong>
+          </div>
+        ))}
+      </section>
+
+      <WeeklyTimelineEditor schedules={schedules} />
+
+      <section style={{ ...panelStyle, padding: "16px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "baseline", flexWrap: "wrap", marginBottom: "14px" }}>
+          <div>
+            <h3 style={{ margin: 0, color: "#334155" }}>Create Schedule</h3>
+            <p style={{ margin: "6px 0 0", color: "#64748b" }}>Building, zone, and device scopes resolve by priority.</p>
+          </div>
+          <span style={{ color: "#64748b", fontSize: "13px" }}>{schedules.length} total schedules</span>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", alignItems: "end" }}>
+          <label style={fieldStyle}>
+            Schedule
+            <input value={scheduleForm.name} onChange={(event) => setScheduleForm((prev) => ({ ...prev, name: event.target.value }))} style={inputStyle} />
+          </label>
+          <label style={fieldStyle}>
+            Scope
+            <select value={scheduleForm.targetType} onChange={(event) => setScheduleForm((prev) => ({ ...prev, targetType: event.target.value }))} style={selectStyle}>
+              <option value="building">Building</option>
+              <option value="zone">Zone</option>
+              <option value="device">Device</option>
+            </select>
+          </label>
+          {scheduleForm.targetType === "building" && (
+            <label style={fieldStyle}>
+              Building
+              <select value={scheduleForm.buildingId} onChange={(event) => setScheduleForm((prev) => ({ ...prev, buildingId: event.target.value }))} style={selectStyle}>
+                {buildings.map((building) => <option key={building.id} value={building.id}>{building.name}</option>)}
+              </select>
+            </label>
+          )}
+          {scheduleForm.targetType === "zone" && (
+            <label style={fieldStyle}>
+              Zone
+              <select value={scheduleForm.zoneId} onChange={(event) => setScheduleForm((prev) => ({ ...prev, zoneId: event.target.value }))} style={selectStyle}>
+                <option value="">Select zone</option>
+                {zones.map((zone) => <option key={zone.id} value={zone.id}>{[zone.buildingName, formatZonePath(zone)].filter(Boolean).join(" / ")}</option>)}
+              </select>
+            </label>
+          )}
+          {scheduleForm.targetType === "device" && (
+            <label style={fieldStyle}>
+              Device
+              <select value={scheduleForm.deviceId} onChange={(event) => setScheduleForm((prev) => ({ ...prev, deviceId: event.target.value }))} style={selectStyle}>
+                <option value="">Select device</option>
+                {devices.map((device) => <option key={device.id} value={device.id}>{device.buildingName} / {device.zoneName} / {device.name}</option>)}
+              </select>
+            </label>
+          )}
+          <label style={fieldStyle}>
+            Recurrence
+            <select value={scheduleForm.recurrence} onChange={(event) => setScheduleForm((prev) => ({ ...prev, recurrence: event.target.value }))} style={selectStyle}>
+              <option value="daily">Daily</option>
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </label>
+          {(scheduleForm.recurrence === "monthly" || scheduleForm.recurrence === "yearly") && (
+            <label style={fieldStyle}>
+              Day
+              <input type="number" min="1" max="31" value={scheduleForm.dayOfMonth} onChange={(event) => setScheduleForm((prev) => ({ ...prev, dayOfMonth: event.target.value }))} style={inputStyle} />
+            </label>
+          )}
+          {scheduleForm.recurrence === "yearly" && (
+            <label style={fieldStyle}>
+              Month
+              <input type="number" min="1" max="12" value={scheduleForm.month} onChange={(event) => setScheduleForm((prev) => ({ ...prev, month: event.target.value }))} style={inputStyle} />
+            </label>
+          )}
+          <label style={fieldStyle}>
+            Start
+            <input type="time" value={scheduleForm.startTime} onChange={(event) => setScheduleForm((prev) => ({ ...prev, startTime: event.target.value }))} style={inputStyle} />
+          </label>
+          <label style={fieldStyle}>
+            End
+            <input type="time" value={scheduleForm.endTime} onChange={(event) => setScheduleForm((prev) => ({ ...prev, endTime: event.target.value }))} style={inputStyle} />
+          </label>
+          <label style={fieldStyle}>
+            Days
+            <input value={scheduleForm.days} onChange={(event) => setScheduleForm((prev) => ({ ...prev, days: event.target.value }))} style={inputStyle} />
+          </label>
+          <label style={fieldStyle}>
+            Action
+            <input value={scheduleForm.action} onChange={(event) => setScheduleForm((prev) => ({ ...prev, action: event.target.value }))} style={inputStyle} />
+          </label>
+          <label style={fieldStyle}>
+            Value
+            <input value={scheduleForm.targetValue} onChange={(event) => setScheduleForm((prev) => ({ ...prev, targetValue: event.target.value }))} style={inputStyle} />
+          </label>
+          <label style={fieldStyle}>
+            Units
+            <input value={scheduleForm.units} onChange={(event) => setScheduleForm((prev) => ({ ...prev, units: event.target.value }))} style={inputStyle} />
+          </label>
+          <button onClick={onCreateSchedule} disabled={saving.scheduleCreate} style={{ ...buttonStyle, backgroundColor: "#0f766e", height: "40px" }}>
+            {saving.scheduleCreate ? "Creating..." : "Create Schedule"}
+          </button>
+        </div>
+      </section>
+
+      <section style={{ ...panelStyle, overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "1180px" }}>
+          <thead>
+            <tr>
+              <th style={headerStyle}>Schedule</th>
+              <th style={headerStyle}>Target</th>
+              <th style={headerStyle}>Recurrence</th>
+              <th style={headerStyle}>Override</th>
+              <th style={headerStyle}>Window</th>
+              <th style={headerStyle}>Days</th>
+              <th style={headerStyle}>Action</th>
+              <th style={headerStyle}>Value</th>
+              <th style={headerStyle}>Status</th>
+              <th style={headerStyle}>Control</th>
+            </tr>
+          </thead>
+          <tbody>
+            {schedules.length === 0 ? (
+              <tr><td colSpan={10} style={{ ...cellStyle, textAlign: "center" }}>No schedules configured.</td></tr>
+            ) : schedules.map((schedule) => (
+              <tr key={schedule.id}>
+                <td style={cellStyle}>{schedule.name}</td>
+                <td style={cellStyle}>{formatScheduleTarget(schedule)}</td>
+                <td style={cellStyle}>
+                  {schedule.recurrence}
+                  {schedule.recurrence === "monthly" && schedule.dayOfMonth ? ` / day ${schedule.dayOfMonth}` : ""}
+                  {schedule.recurrence === "yearly" && schedule.month && schedule.dayOfMonth ? ` / ${schedule.month}/${schedule.dayOfMonth}` : ""}
+                </td>
+                <td style={cellStyle}>{schedule.scopeType} ({schedule.overridePriority})</td>
+                <td style={cellStyle}>{schedule.startTime} - {schedule.endTime}</td>
+                <td style={cellStyle}>{schedule.days}</td>
+                <td style={cellStyle}>{schedule.action}</td>
+                <td style={cellStyle}>{schedule.targetValue ?? "-"} {schedule.units || ""}</td>
+                <td style={cellStyle}>{schedule.enabled ? "Enabled" : "Disabled"}</td>
+                <td style={cellStyle}>
+                  <button
+                    onClick={() => onToggleSchedule(schedule)}
+                    disabled={saving[`schedule-${schedule.id}`]}
+                    style={{ ...buttonStyle, backgroundColor: schedule.enabled ? "#dc2626" : "#16a34a" }}
+                  >
+                    {schedule.enabled ? "Disable" : "Enable"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "14px" }}>
+        <div style={{ ...panelStyle, overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "720px" }}>
+            <thead>
+              <tr>
+                <th style={headerStyle}>Holiday</th>
+                <th style={headerStyle}>Building</th>
+                <th style={headerStyle}>Date</th>
+                <th style={headerStyle}>Window</th>
+                <th style={headerStyle}>Action</th>
+                <th style={headerStyle}>Status</th>
+                <th style={headerStyle}>Control</th>
+              </tr>
+            </thead>
+            <tbody>
+              {holidaySchedules.length === 0 ? (
+                <tr><td colSpan={7} style={{ ...cellStyle, textAlign: "center" }}>No holiday schedules configured.</td></tr>
+              ) : holidaySchedules.map((holiday) => (
+                <tr key={holiday.id}>
+                  <td style={cellStyle}>{holiday.name}</td>
+                  <td style={cellStyle}>{holiday.buildingName || "Global"}</td>
+                  <td style={cellStyle}>{holiday.eventDate || `${holiday.month}/${holiday.dayOfMonth}`} {holiday.recurring ? "yearly" : ""}</td>
+                  <td style={cellStyle}>{holiday.startTime} - {holiday.endTime}</td>
+                  <td style={cellStyle}>{holiday.action} {holiday.targetValue ?? ""} {holiday.units || ""}</td>
+                  <td style={cellStyle}>{holiday.enabled ? "Enabled" : "Disabled"}</td>
+                  <td style={cellStyle}>
+                    <button onClick={() => onDisableHolidaySchedule(holiday.id)} disabled={!holiday.enabled || saving[`holiday-${holiday.id}`]} style={{ ...buttonStyle, backgroundColor: holiday.enabled ? "#dc2626" : "#94a3b8" }}>
+                      Disable
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ ...panelStyle, overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "820px" }}>
+            <thead>
+              <tr>
+                <th style={headerStyle}>Event</th>
+                <th style={headerStyle}>Target</th>
+                <th style={headerStyle}>Window</th>
+                <th style={headerStyle}>Priority</th>
+                <th style={headerStyle}>Action</th>
+                <th style={headerStyle}>Status</th>
+                <th style={headerStyle}>Control</th>
+              </tr>
+            </thead>
+            <tbody>
+              {specialEvents.length === 0 ? (
+                <tr><td colSpan={7} style={{ ...cellStyle, textAlign: "center" }}>No special events configured.</td></tr>
+              ) : specialEvents.map((eventItem) => (
+                <tr key={eventItem.id}>
+                  <td style={cellStyle}>{eventItem.name}</td>
+                  <td style={cellStyle}>{formatScheduleTarget(eventItem)}</td>
+                  <td style={cellStyle}>{eventItem.startAt} - {eventItem.endAt}</td>
+                  <td style={cellStyle}>{eventItem.priority}</td>
+                  <td style={cellStyle}>{eventItem.action} {eventItem.targetValue ?? ""} {eventItem.units || ""}</td>
+                  <td style={cellStyle}>{eventItem.enabled ? "Enabled" : "Disabled"}</td>
+                  <td style={cellStyle}>
+                    <button onClick={() => onDisableSpecialEvent(eventItem.id)} disabled={!eventItem.enabled || saving[`special-event-${eventItem.id}`]} style={{ ...buttonStyle, backgroundColor: eventItem.enabled ? "#dc2626" : "#94a3b8" }}>
+                      Disable
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </section>
   );
 }
 
@@ -2711,6 +3541,16 @@ function AutonomousModePanel({ form, setForm, mode, optimization, buildingOptimi
 }
 
 export default function App() {
+  const publicPath = typeof window === "undefined" ? "/" : normalizePublicPath(window.location.pathname);
+
+  if (publicPath === "/portfolio" || publicPath === "/embedded-systems-engineer-portfolio") {
+    return <EmbeddedSystemsPortfolio />;
+  }
+
+  return <BemsApp />;
+}
+
+function BemsApp() {
   const [session, setSession] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem("bems.session") || "null");
@@ -4147,6 +4987,8 @@ export default function App() {
         </div>
         <nav className="bems-command-tabs" style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           <button onClick={() => setView("dashboard")} className={view === "dashboard" ? "is-active" : ""} style={{ ...buttonStyle, backgroundColor: view === "dashboard" ? "#2563eb" : "#64748b" }} {...tooltip("Open the home dashboard with KPIs, live telemetry, AI optimization, alarms, schedules, and commissioning")}>Home</button>
+          <button onClick={() => setView("projects")} className={view === "projects" ? "is-active" : ""} style={{ ...buttonStyle, backgroundColor: view === "projects" ? "#2563eb" : "#64748b" }} {...tooltip("Open the embedded portfolio project implementation dashboard")}>Projects</button>
+          <button onClick={() => setView("schedules")} className={view === "schedules" ? "is-active" : ""} style={{ ...buttonStyle, backgroundColor: view === "schedules" ? "#2563eb" : "#64748b" }} {...tooltip("Open schedules, overrides, holidays, and special events")}>Schedules</button>
           <button onClick={() => setView("hvac")} className={view === "hvac" ? "is-active" : ""} style={{ ...buttonStyle, backgroundColor: view === "hvac" ? "#2563eb" : "#64748b" }} {...tooltip("Open animated AHU and VAV equipment graphics")}>HVAC Graphics</button>
           <button onClick={() => setView("supervisory")} className={view === "supervisory" ? "is-active" : ""} style={{ ...buttonStyle, backgroundColor: view === "supervisory" ? "#2563eb" : "#64748b" }} {...tooltip("Open EcoStruxure-style supervisory graphics and device tree")}>System Tree</button>
           {canManageUsers && (
@@ -4178,6 +5020,8 @@ export default function App() {
           <div className="bems-sidebar-title">Navigation</div>
           {[
             ["Home", "dashboard", "Home dashboard with KPIs, telemetry, AI, alarms, schedules"],
+            ["Projects", "projects", "Embedded portfolio project implementation tracks"],
+            ["Schedules", "schedules", "Schedules, holidays, overrides, and special events"],
             ["Buildings", "supervisory", "Building tree and device context"],
             ["Alarms", "dashboard", "Alarm console and alarm logs"],
             ["Trends", "dashboard", "Charts, history, and live telemetry feed"],
@@ -4211,7 +5055,8 @@ export default function App() {
         </aside>
 
         <main className="bems-main-panel">
-          <section className="bems-ops-strip" aria-label="operations status">
+          <section className="bems-ops-strip" aria-label="Building Summary">
+            <span><strong>Building Summary</strong></span>
             <span><strong>{activeBuilding?.name || session.buildingName || "All Buildings"}</strong> active scope</span>
             <span><strong>{telemetryConnected ? "Live" : "Recovering"}</strong> SSE telemetry</span>
             <span><strong>{activeAlarmCount}</strong> active alarms</span>
@@ -4266,13 +5111,54 @@ export default function App() {
         />
       )}
 
+      {view === "schedules" && !loading && !error && (
+        <SchedulesPage
+          schedules={schedules}
+          holidaySchedules={holidaySchedules}
+          specialEvents={specialEvents}
+          buildings={buildings}
+          zones={zones}
+          devices={devices}
+          scheduleForm={scheduleForm}
+          setScheduleForm={setScheduleForm}
+          onCreateSchedule={createSchedule}
+          onToggleSchedule={toggleSchedule}
+          onDisableHolidaySchedule={disableHolidaySchedule}
+          onDisableSpecialEvent={disableSpecialEvent}
+          saving={saving}
+        />
+      )}
+
+      {view === "projects" && !loading && !error && (
+        <EmbeddedProjectsDashboard />
+      )}
+
       {view === "dashboard" && !loading && !error && (
         <>
           <section className="bems-home-hero" aria-label="Home dashboard">
             <div>
               <div className="bems-console-eyebrow">Home Page</div>
-              <h2>Dashboard</h2>
+              <h2>IntelliBuild Energy</h2>
               <p>Unified BMS view for live building health, MySQL-backed telemetry, BEMS-ai optimization, edge-core commands, BACnet devices, alarms, schedules, and deployment evidence.</p>
+              <div className="bems-home-actions">
+                <button
+                  className="bems-home-link bems-home-link-secondary"
+                  type="button"
+                  onClick={() => setView("projects")}
+                  {...tooltip("Open the embedded portfolio project implementation dashboard")}
+                >
+                  Project Dashboard
+                </button>
+                <a
+                  className="bems-home-link"
+                  href={portfolioContactUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  {...tooltip("Open the embedded systems portfolio contact section in a new tab")}
+                >
+                  Portfolio Contact
+                </a>
+              </div>
             </div>
           </section>
 
@@ -4301,7 +5187,7 @@ export default function App() {
 
           <HistoryTimeline history={history} />
 
-          <section style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "14px", marginBottom: "24px" }}>
+          <section className="bems-status-card-grid" aria-label="Building Energy Status">
             {[
               ["Devices", devices.length],
               ["Active Alarms", activeAlarmCount],
@@ -4313,9 +5199,9 @@ export default function App() {
               ["Monthly Cost", buildingFootprint ? `$${buildingFootprint.totals.monthlyCost}` : "Pending"],
               ["Annual Carbon", buildingFootprint ? `${buildingFootprint.totals.annualCarbonTons} t` : "Pending"],
             ].map(([label, value]) => (
-              <div key={label} style={{ ...panelStyle, padding: "16px" }}>
-                <div style={{ color: "#64748b", fontSize: "13px" }}>{label}</div>
-                <strong style={{ color: "#1f355e", fontSize: "24px" }}>{value}</strong>
+              <div key={label} className="bems-status-card" style={panelStyle}>
+                <div className="bems-status-card-label">{label}</div>
+                <strong className="bems-status-card-value">{value}</strong>
               </div>
             ))}
           </section>
