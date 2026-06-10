@@ -358,8 +358,196 @@
     text-decoration: none;
   }
 
+  button.bems-home-link {
+    cursor: pointer;
+    font-family: inherit;
+  }
+
   .bems-home-link:hover {
     background: #115e59;
+  }
+
+  .bems-home-link-secondary {
+    background: #1d4ed8;
+    border-color: rgba(29, 78, 216, 0.24);
+  }
+
+  .bems-home-link-secondary:hover {
+    background: #1e40af;
+  }
+
+  .bems-project-dashboard {
+    display: grid;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .bems-project-hero {
+    align-items: center;
+    border: 1px solid rgba(148, 163, 184, 0.32);
+    border-radius: 8px;
+    background:
+      linear-gradient(90deg, rgba(15, 118, 110, 0.14), rgba(29, 78, 216, 0.1), rgba(245, 158, 11, 0.08)),
+      rgba(255, 255, 255, 0.8);
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 1rem 1.1rem;
+  }
+
+  .bems-project-hero h2 {
+    color: #0f172a;
+    font-size: 1.35rem;
+    font-weight: 900;
+    margin: 0;
+  }
+
+  .bems-project-hero p {
+    color: #475569;
+    margin: 0.35rem 0 0;
+    max-width: 58rem;
+  }
+
+  .bems-project-metrics {
+    display: grid;
+    gap: 0.55rem;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  }
+
+  .bems-project-metric,
+  .bems-project-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
+  }
+
+  .bems-project-metric {
+    padding: 0.75rem;
+  }
+
+  .bems-project-metric strong,
+  .bems-project-metric span {
+    display: block;
+  }
+
+  .bems-project-metric strong {
+    color: #1f355e;
+    font-size: 1.35rem;
+    line-height: 1.05;
+  }
+
+  .bems-project-metric span {
+    color: #64748b;
+    font-size: 0.74rem;
+    font-weight: 900;
+    margin-top: 0.25rem;
+    text-transform: uppercase;
+  }
+
+  .bems-project-grid {
+    display: grid;
+    gap: 0.9rem;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  }
+
+  .bems-project-card {
+    padding: 1rem;
+  }
+
+  .bems-project-card-head {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+    justify-content: space-between;
+    margin-bottom: 0.7rem;
+  }
+
+  .bems-project-card-head small {
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-align: right;
+    text-transform: uppercase;
+  }
+
+  .bems-project-status {
+    background: color-mix(in srgb, var(--project-status-color) 13%, white);
+    border: 1px solid color-mix(in srgb, var(--project-status-color) 28%, white);
+    border-radius: 999px;
+    color: var(--project-status-color);
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    font-weight: 900;
+    padding: 0.32rem 0.55rem;
+  }
+
+  .bems-project-card h3 {
+    color: #0f172a;
+    font-size: 1.05rem;
+    font-weight: 900;
+    margin: 0;
+  }
+
+  .bems-project-card p {
+    color: #475569;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin: 0.6rem 0 0;
+  }
+
+  .bems-project-chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.8rem 0;
+  }
+
+  .bems-project-chip-row span {
+    border: 1px solid #cbd5e1;
+    border-radius: 999px;
+    color: #334155;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 0.32rem 0.5rem;
+  }
+
+  .bems-project-detail {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 0.75rem;
+  }
+
+  .bems-project-detail strong,
+  .bems-project-list-grid strong {
+    color: #1f355e;
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .bems-project-detail span {
+    color: #334155;
+    display: block;
+    font-size: 0.88rem;
+    margin-top: 0.2rem;
+  }
+
+  .bems-project-list-grid {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 0.8rem;
+  }
+
+  .bems-project-list-grid ul {
+    color: #475569;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    list-style: disc;
+    margin: 0.35rem 0 0;
+    padding-left: 1.05rem;
   }
 
   .bems-architecture-panel {
@@ -596,6 +784,54 @@
 
   .dark .bems-home-link:hover {
     background: #5eead4;
+  }
+
+  .dark .bems-home-link-secondary {
+    background: #60a5fa;
+    color: #082f49;
+  }
+
+  .dark .bems-home-link-secondary:hover {
+    background: #93c5fd;
+  }
+
+  .dark .bems-project-hero {
+    background:
+      linear-gradient(90deg, rgba(20, 184, 166, 0.18), rgba(96, 165, 250, 0.16), rgba(245, 158, 11, 0.12)),
+      rgba(15, 23, 42, 0.86);
+    border-color: #263244;
+  }
+
+  .dark .bems-project-hero h2,
+  .dark .bems-project-card h3,
+  .dark .bems-project-metric strong,
+  .dark .bems-project-detail strong,
+  .dark .bems-project-list-grid strong {
+    color: #e5e7eb;
+  }
+
+  .dark .bems-project-hero p,
+  .dark .bems-project-card p,
+  .dark .bems-project-detail span,
+  .dark .bems-project-list-grid ul,
+  .dark .bems-project-card-head small,
+  .dark .bems-project-metric span {
+    color: #cbd5e1;
+  }
+
+  .dark .bems-project-metric,
+  .dark .bems-project-card {
+    background: rgba(15, 23, 42, 0.82);
+    border-color: #263244;
+  }
+
+  .dark .bems-project-chip-row span {
+    border-color: #334155;
+    color: #dbeafe;
+  }
+
+  .dark .bems-project-detail {
+    border-color: #263244;
   }
 
   .dark .bems-architecture-panel {
