@@ -160,10 +160,10 @@ const portfolioProjects = [
     result: "Clear pass/fail evidence for firmware updates, board bring-up, and field acceptance.",
   },
   {
-    title: "Zephyr RTOS IoT Sensor Node",
+    title: "BACnet Wireless Field Sensor Node",
     category: "Senior repo example",
-    summary: "Edge sensor node with Zephyr threads, Wi-Fi/BLE provisioning, power-mode profiling, encrypted telemetry, and signed OTA firmware updates.",
-    stack: ["Zephyr RTOS", "BLE", "Wi-Fi", "MCUboot", "TLS", "Power profiling"],
+    summary: "Bare-metal C++17 field sensor node with Wi-Fi/BLE provisioning, cooperative timing, power-mode profiling, encrypted telemetry, and signed OTA firmware updates.",
+    stack: ["Bare-metal C++17", "BLE", "Wi-Fi", "MCUboot", "TLS", "Power profiling"],
     result: "Repo proof: real concurrency, secure update flow, low-power design, and production-grade device lifecycle thinking.",
   },
   {
@@ -188,10 +188,10 @@ const portfolioProjects = [
     result: "Repo proof: production deployment pipelines, secure update handling, flash layout discipline, and field recovery behavior.",
   },
   {
-    title: "Bare-Metal RTOS Scheduling",
+    title: "Bare-Metal Cooperative Scheduler",
     category: "Senior repo example",
-    summary: "Multi-threaded FreeRTOS or Zephyr application with queues, mutexes, semaphores, interrupt handoff, and documented handling of resource contention and priority inversion.",
-    stack: ["FreeRTOS", "Zephyr", "IPC", "Mutexes", "Semaphores", "Priority inheritance"],
+    summary: "Bare-metal C++17 cooperative scheduler with queues, guarded resources, interrupt handoff, and documented handling of contention and priority-like service ordering.",
+    stack: ["Bare-metal C++17", "Cooperative scheduler", "IPC-style queues", "Guarded resources", "Interrupt handoff", "Service ordering"],
     result: "Repo proof: real concurrency, deterministic task design, shared-resource safety, and explainable scheduler tradeoffs.",
   },
   {
@@ -246,15 +246,15 @@ const portfolioProjects = [
   {
     title: "Medical Wearable Power Manager",
     category: "Senior repo example",
-    summary: "RTOS power-management thread for a battery wearable that schedules sensor reads, drops the MCU into the deepest valid sleep mode, and uses DMA to collect samples without waking the main CPU.",
-    stack: ["RTOS", "Sleep states", "DMA", "Sensor sampling", "Battery telemetry", "Wake sources"],
+    summary: "Bare-metal power-management loop for a battery wearable that schedules sensor reads, drops the MCU into the deepest valid sleep mode, and uses DMA to collect samples without waking the main CPU.",
+    stack: ["Bare-metal C++17", "Sleep states", "DMA", "Sensor sampling", "Battery telemetry", "Wake sources"],
     result: "Repo proof: days-to-weeks runtime thinking, measurable sleep-current reduction, autonomous data capture, and medical-device-grade power discipline.",
   },
   {
     title: "Connected IoT Device",
     category: "Standout integration project",
-    summary: "RTOS-based sensor node with MQTT cloud integration, signed OTA updates, low-power operating modes, and TLS-backed device identity for secure telemetry.",
-    stack: ["FreeRTOS/Zephyr", "MQTT", "TLS", "OTA", "Low power modes", "Device identity"],
+    summary: "Bare-metal sensor node with MQTT cloud integration, signed OTA updates, low-power operating modes, and TLS-backed device identity for secure telemetry.",
+    stack: ["Bare-metal C++17", "MQTT", "TLS", "OTA", "Low power modes", "Device identity"],
     result: "Repo proof: end-to-end connected-device architecture, secure cloud messaging, field-update readiness, and measured battery-aware behavior.",
   },
   {
@@ -292,11 +292,11 @@ const projectImplementationBlueprints = {
     artifacts: ["production board runbook", "SWUpdate checks", "hardware validation script", "rollback drill plan"],
     verification: ["preflight script", "update-cycle evidence plan", "commissioning checklist"],
   },
-  "Zephyr RTOS IoT Sensor Node": {
+  "BACnet Wireless Field Sensor Node": {
     status: "Implementation blueprint",
-    target: "Zephyr RTOS Wi-Fi/BLE sensor node",
-    artifacts: ["RTOS task model", "TLS MQTT telemetry", "signed OTA path", "low-power measurement plan"],
-    verification: ["thread tests", "power profiling log", "OTA rollback test", "cloud publish smoke test"],
+    target: "Bare-metal Wi-Fi/BLE BACnet sensor node",
+    artifacts: ["cooperative task model", "TLS MQTT telemetry", "signed OTA path", "low-power measurement plan"],
+    verification: ["cooperative-loop tests", "power profiling log", "OTA rollback test", "cloud publish smoke test"],
   },
   "Closed-Loop Motor Control Platform": {
     status: "Implementation blueprint",
@@ -316,10 +316,10 @@ const projectImplementationBlueprints = {
     artifacts: ["dual image slots", "signed manifest", "TLS update client", "known-good fallback"],
     verification: ["staged update test", "bad signature test", "rollback drill"],
   },
-  "Bare-Metal RTOS Scheduling": {
+  "Bare-Metal Cooperative Scheduler": {
     status: "Implementation blueprint",
-    target: "FreeRTOS or Zephyr multi-threaded firmware",
-    artifacts: ["task graph", "queues", "mutexes", "semaphores", "priority inversion notes"],
+    target: "Bare-metal C++17 field-device firmware",
+    artifacts: ["task graph", "queues", "guarded resources", "interrupt handoff", "service ordering notes"],
     verification: ["IPC tests", "scheduler trace", "contention and latency report"],
   },
   "Embedded Linux / Yocto Image": {
@@ -366,13 +366,13 @@ const projectImplementationBlueprints = {
   },
   "Medical Wearable Power Manager": {
     status: "Implementation blueprint",
-    target: "Medical wearable MCU with RTOS power manager",
+    target: "Medical wearable MCU with bare-metal power manager",
     artifacts: ["sleep-state owner thread", "DMA sensor capture", "wake source table", "battery telemetry"],
     verification: ["sleep residency report", "DMA capture test", "multi-day runtime estimate"],
   },
   "Connected IoT Device": {
     status: "Implementation blueprint",
-    target: "RTOS sensor node with secure MQTT cloud connection",
+    target: "Bare-metal sensor node with secure MQTT cloud connection",
     artifacts: ["MQTT client", "TLS identity", "OTA update flow", "low-power state machine"],
     verification: ["cloud publish test", "TLS cert rotation notes", "battery profile", "OTA smoke test"],
   },
@@ -396,7 +396,7 @@ const implementationStatusColors = {
 };
 
 const portfolioCapabilities = [
-  ["Firmware", "Bare-metal C/C++, RTOS-style scheduling, peripheral drivers, persistent configuration, and defensive fault handling."],
+  ["Firmware", "Bare-metal C/C++, cooperative scheduling, peripheral drivers, persistent configuration, and defensive fault handling."],
   ["Protocols", "BACnet/IP, Modbus RTU, CAN, MQTT, RabbitMQ, SSE, and structured telemetry contracts for mixed building networks."],
   ["Edge Systems", "Linux appliance packaging, Docker deployment, health checks, local command enforcement, and cloud bridge readiness."],
   ["Validation", "Commissioning checklists, trend logging, production flashing, OTA evidence, soak testing, and operator-facing diagnostics."],
@@ -469,7 +469,7 @@ function EmbeddedSystemsPortfolio() {
               <a className="embedded-button embedded-button-secondary" href="#contact">Start a Conversation</a>
             </div>
             <div className="embedded-hero-tags" aria-label="Core specialties">
-              {["Embedded C/C++", "BACnet", "RTOS logic", "Yocto", "Device commissioning"].map((tag) => (
+              {["Embedded C/C++", "BACnet", "Bare-metal logic", "Yocto", "Device commissioning"].map((tag) => (
                 <span key={tag}>{tag}</span>
               ))}
             </div>
@@ -499,7 +499,7 @@ function EmbeddedSystemsPortfolio() {
           <div className="embedded-section-heading">
             <p className="embedded-eyebrow">Repo Example Work</p>
             <h2 id="embedded-work-title">Senior-level proof projects</h2>
-            <p>These examples avoid tutorial-level demos and instead show the complexity recruiters and hardware teams expect: RTOS architecture, secure OTA, control loops, sensor fusion, bootloaders, and field-update safety.</p>
+            <p>These examples avoid tutorial-level demos and instead show the complexity recruiters and hardware teams expect: bare-metal architecture, secure OTA, control loops, sensor fusion, bootloaders, and field-update safety.</p>
           </div>
           <div className="embedded-project-grid">
             {portfolioProjects.map((project, index) => (
