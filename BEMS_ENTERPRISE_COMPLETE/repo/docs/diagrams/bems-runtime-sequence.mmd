@@ -1,0 +1,14 @@
+sequenceDiagram
+    autonumber
+    participant Browser as Browser UI
+    participant Api as Node.js API
+    participant Edge as C++ Edge Core
+    participant Field as BACnet/IP Device
+
+    Browser->>Api: Request data or command
+    Api-->>Browser: HTTP/JSON response
+    Api-->>Browser: SSE telemetry/alarm update
+    Api->>Edge: gRPC call
+    Edge-->>Api: gRPC response
+    Edge->>Field: BACnet/IP read/write
+    Field-->>Edge: BACnet/IP response

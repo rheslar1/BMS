@@ -1,0 +1,34 @@
+erDiagram
+    BUILDING ||--o{ ZONE : contains
+    ZONE ||--o{ DEVICE : contains
+    ALARM {
+        int id
+        text message
+    }
+    BUILDING {
+        int building_id
+        string name
+        string address
+        text description
+    }
+    ZONE {
+        int zone_id
+        int building_id
+        string name
+        text description
+    }
+    DEVICE {
+        int device_id
+        int zone_id
+        string name
+        string type
+        int bacnet_instance
+        string object_type
+        string vendor
+        string model
+        string ip_address
+        double present_value
+        string units
+        string status
+        text description
+    }

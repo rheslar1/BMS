@@ -1,0 +1,11 @@
+flowchart TB
+    presentation["Presentation Layer<br/>React UI, SSE real-time updates"]
+    application["Application Layer<br/>Node.js API, HTTP/JSON, SSE"]
+    service["Service Layer<br/>gRPC services, Node.js to C++ Edge Core"]
+    core["Core Layer<br/>C++ edge core, control, AI hooks, analytics, BACnet"]
+    field["Field Layer<br/>FreeRTOS BACnet/IP devices, EEPROM config"]
+
+    presentation --> application
+    application --> service
+    service --> core
+    core --> field

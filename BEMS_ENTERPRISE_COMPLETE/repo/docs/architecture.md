@@ -1,5 +1,9 @@
 # BEMS Architecture
 
+## Deep Implementation Guide
+
+For the implementation-focused documentation mapped to the latest runtime, layered, and data-model diagrams, see [`bems-enterprise-complete-implementation-guide.md`](bems-enterprise-complete-implementation-guide.md).
+
 ## System Overview
 
 This repository implements an AI-driven Building Management and Energy Management System (BMS/BEMS) for edge deployment. The platform combines a C++ edge control core, Node.js application API, Python AI optimization service, React operator dashboard, MySQL persistence, Docker deployment, and Yocto packaging for i.MX93-class hardware.
