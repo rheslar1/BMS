@@ -7,7 +7,7 @@ This repository contains the `BEMS_ENTERPRISE_COMPLETE` implementation package: 
 | Area | Path |
 | --- | --- |
 | Deep implementation guide | `BEMS_ENTERPRISE_COMPLETE/repo/docs/bems-enterprise-complete-implementation-guide.md` |
-| Existing architecture overview | `BEMS_ENTERPRISE_COMPLETE/repo/docs/architecture.md` |
+| Existing architecture overview | `BEMS_ENTERPRISE_COMPLETE/repo/docs/detailed design archtitecture.md` |
 | C++ BACnet edge core | `BEMS_ENTERPRISE_COMPLETE/repo/edge-core/` |
 | Node.js REST/SSE API | `BEMS_ENTERPRISE_COMPLETE/repo/node-api/` |
 | React operator UI | `BEMS_ENTERPRISE_COMPLETE/repo/ui/` |
